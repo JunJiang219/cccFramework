@@ -4,7 +4,7 @@
  * 2021-1-31 by 宝爷
  */
 
-import { Asset, isValid } from "cc";
+import { Asset, assetManager, isValid } from "cc";
 import { ResUtil } from "./ResUtil";
 
 export type FilterCallback = (asset: Asset) => boolean;
@@ -142,17 +142,17 @@ export class ResLeakChecker {
             let traceMap: Map<string, number> | undefined = element.traceMap;
             if (traceMap) {
                 console.log('----------------------------------------------');
-                let unRef = true;
+                console.log(`追踪资源: name = ${element.name}, uuid = ${element._uuid}, refCount = ${element.refCount}`);
                 traceMap.forEach((key, value) => {
-                    unRef = false;
                     console.log(`${key} : ${value} `);
                 });
-                if (unRef) {
-                    console.log(`资源未调用引用计数, uuid = ${element._uuid}`);
-                    console.log(element);
-                }
             }
         })
+    }
+
+    public dumpAssetInfo(uuid: string) {
+        let info = assetManager.assets.get(uuid);
+        console.log(info);
     }
 }
 
