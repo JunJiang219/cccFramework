@@ -86,7 +86,7 @@ export class ResUtil {
      * @param cha 要查找的字符
      * @param num 第N个
      */
-    static findCharPos(str: string, cha: string, num: number): number {
+    public static findCharPos(str: string, cha: string, num: number): number {
         let x = str.indexOf(cha);
         let ret = x;
         for (var i = 0; i < num; i++) {
@@ -104,7 +104,7 @@ export class ResUtil {
      * 获取当前调用堆栈
      * @param popCount 要弹出的堆栈数量
      */
-    static getCallStack(popCount: number): string {
+    public static getCallStack(popCount: number): string {
         // 严格模式无法访问 arguments.callee.caller 获取堆栈，只能先用Error的stack
         let ret = (new Error()).stack;
         let pos = ResUtil.findCharPos(ret!, '\n', popCount);

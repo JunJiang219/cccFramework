@@ -22,6 +22,12 @@ interface ILoadResArgs<T extends Asset> {
 }
 
 export default class ResLoader {
+    private static _instance: ResLoader | null = null;
+    private constructor() {}
+    public static getInstance(): ResLoader {
+        if (!this._instance) this._instance = new ResLoader();
+        return this._instance;
+    }
 
     public parseLoadResArgs<T extends Asset>(
         paths: string | string[],
@@ -141,4 +147,4 @@ export default class ResLoader {
     }
 }
 
-export let resLoader = new ResLoader();
+export let resLoader = ResLoader.getInstance();

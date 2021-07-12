@@ -44,7 +44,7 @@ export class ResLeakChecker {
 
     /**
      * 通过uuid过滤资源
-     * @param idList uuid列表
+     * @param idList 需要追踪的资源uuid列表
      */
     public filterResByUUID(idList?: string[]) {
         if (!idList || idList.length <= 0) this.resFilter = null;
@@ -143,8 +143,8 @@ export class ResLeakChecker {
             if (traceMap) {
                 console.log('----------------------------------------------');
                 console.log(`追踪资源: name = ${element.name}, uuid = ${element._uuid}, refCount = ${element.refCount}`);
-                traceMap.forEach((key, value) => {
-                    console.log(`${key} : ${value} `);
+                traceMap.forEach((value, key) => {
+                    console.log(`${value} : ${key} `);
                 });
             }
         })
