@@ -117,9 +117,21 @@ export class ResLeakChecker {
         }
     }
 
+    // 移除失效资源(资源已从内存移除)的追踪记录
+    private _removeInValidTrace() {
+        let inValidAssets: Asset[] = [];
+        this.traceAssets.forEach(element => {
+            if (!isValid(element)) inValidAssets.push(element);
+        });
+        for (let i = 0; i < inValidAssets.length; ++i) this.traceAssets.delete(inValidAssets[i]);
+    }
+
     public startCheck() { this._checking = true; }
     public stopCheck() { this._checking = false; }
-    public getTraceAssets(): Set<Asset> { return this.traceAssets; }
+    public getTraceAssets(): Set<Asset> {
+        this._removeInValidTrace();
+        return this.traceAssets;
+    }
 
     public reset() {
         this.traceAssets.forEach(element => {
@@ -130,14 +142,7 @@ export class ResLeakChecker {
     }
 
     public dump() {
-        // 删除失效资源
-        let inValidAssets: Asset[] = [];
-        this.traceAssets.forEach(element => {
-            if (!isValid(element)) inValidAssets.push(element);
-        });
-        for (let i = 0; i < inValidAssets.length; ++i) this.traceAssets.delete(inValidAssets[i]);
-        inValidAssets = null!;
-
+        this._removeInValidTrace();
         this.traceAssets.forEach(element => {
             let traceMap: Map<string, number> | undefined = element.traceMap;
             if (traceMap) {
