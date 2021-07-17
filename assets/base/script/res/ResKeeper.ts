@@ -11,7 +11,7 @@ import { AssetType, CompleteCallback, IRemoteOptions, ProgressCallback, ResUtil 
  */
 const { ccclass } = _decorator;
 
-@ccclass
+@ccclass("ResKeeper")
 export class ResKeeper extends Component {
     // 缓存资源记录
     private _resCache = new Set<Asset>();
