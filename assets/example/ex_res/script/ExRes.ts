@@ -1,5 +1,5 @@
 
-import { _decorator, Component, SpriteFrame, Sprite, EventTouch, assetManager, resources } from 'cc';
+import { _decorator, Component, SpriteFrame, Sprite, EventTouch, assetManager, resources, Texture2D } from 'cc';
 import { ResLeakChecker } from '../../../script/res/ResLeakChecker';
 import { resLoader } from '../../../script/res/ResLoader';
 const { ccclass, property } = _decorator;

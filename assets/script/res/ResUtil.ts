@@ -1,12 +1,97 @@
-import { instantiate, Node, Asset, Prefab } from "cc";
-import { ResKeeper } from "./ResKeeper";
-import { CompleteCallback, ProgressCallback } from "./ResLoader";
 /**
  * 资源使用相关工具类
  * 2020-1-18 by 宝爷
  */
 
+import { instantiate, Node, Asset, Prefab, __private, Constructor, js } from "cc";
+import { ResKeeper } from "./ResKeeper";
+
+ export type ProgressCallback = __private.cocos_core_asset_manager_shared_ProgressCallback;
+ export type CompleteCallback<T = any> = __private.cocos_core_asset_manager_shared_CompleteCallbackWithData;
+ export type IRemoteOptions = __private.cocos_core_asset_manager_shared_IRemoteOptions;
+ export type AssetType<T = Asset> = Constructor<T>;
+
+ export interface ILoadResArgs<T extends Asset> {
+    paths?: string | string[];                  // 资源路径
+    dir?: string;                               // 目录
+    type?: AssetType<T> | null;                 // 资源类型
+    options?: IRemoteOptions | null;            // 远程资源可选参数
+    onProgress?: ProgressCallback | null;       // 加载进度回调
+    onComplete?: CompleteCallback<T> | CompleteCallback<T[]> | null;    // 加载完成回调
+    bundleName?: string;                        // bundle名
+}
+
 export class ResUtil {
+    /**
+     * 构建bundle内资源加载参数结构体
+     */
+    public static makeLoadResArgs<T extends Asset>(...args: any[]): ILoadResArgs<T> | null {
+        if (args.length < 1) {
+            console.error(`makeLoadResArgs error ${args}`);
+            return null;
+        }
+
+        let resArgs: ILoadResArgs<T> = { bundleName: "resources" };
+        if (typeof args[0] == "string") {
+            resArgs.paths = args[0];
+        } else if (args[0] instanceof Array) {
+            resArgs.paths = args[0];
+        }else if (args[0] instanceof Object) {
+            return args[0];    // 已经是 ILoadResArgs
+        } else {
+            console.error(`makeLoadResArgs error ${args}`);
+            return null;
+        }
+
+        for (let i = 1; i < args.length; ++i) {
+            if (i == 1 && js.isChildClassOf(args[i], Asset)) {
+                // 判断是不是第一个参数type
+                resArgs.type = args[i];
+            } else if (typeof args[i] == "string") {
+                resArgs.bundleName = args[i];
+            } else if (typeof args[i] == "function") {
+                // 其他情况为函数
+                if (args.length > i + 1 && typeof args[i + 1] == "function") {
+                    resArgs.onProgress = args[i];
+                } else {
+                    resArgs.onComplete = args[i];
+                }
+            }
+        }
+
+        return resArgs;
+    }
+
+    /**
+     * 构建远程资源加载参数结构体
+     */
+     public static makeLoadRemoteArgs<T extends Asset>(...args: any[]): ILoadResArgs<T> | null {
+        if (args.length < 1) {
+            console.error(`makeLoadRemoteArgs error ${args}`);
+            return null;
+        }
+
+        let resArgs: ILoadResArgs<T> = {};
+        if (typeof args[0] == "string") {
+            resArgs.dir = args[0];
+        } else if (args[0] instanceof Object) {
+            return args[0];    // 已经是 ILoadResArgs
+        } else {
+            console.error(`makeLoadRemoteArgs error ${args}`);
+            return null;
+        }
+
+        for (let i = 1; i < args.length; ++i) {
+            if (typeof args[i] == "function") {
+                resArgs.onComplete = args[i];
+            } else if (args[i] instanceof Object) {
+                resArgs.options = args[i];
+            }
+        }
+
+        return resArgs;
+    }
+
     /**
      * 开始加载资源
      * @param bundle        assetbundle的路径
