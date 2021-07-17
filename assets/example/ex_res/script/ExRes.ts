@@ -2,6 +2,7 @@
 import { _decorator, Component, SpriteFrame, Sprite, EventTouch, assetManager, resources, Texture2D } from 'cc';
 import { ResLeakChecker } from '../../../script/res/ResLeakChecker';
 import { resLoader } from '../../../script/res/ResLoader';
+import { ResUtil } from '../../../script/res/ResUtil';
 const { ccclass, property } = _decorator;
 
 @ccclass('ExRes')
@@ -26,7 +27,6 @@ export class ExRes extends Component {
         resLoader.load(path, SpriteFrame, (err, asset: SpriteFrame) => {
             if (err) return;
             this.spr.spriteFrame = asset;
-            ResLeakChecker.getInstance().traceAsset(asset);
             asset.addRef();
         })
     }

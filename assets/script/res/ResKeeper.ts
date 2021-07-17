@@ -1,5 +1,6 @@
 import { Asset, Component, _decorator } from "cc";
-import { AssetType, CompleteCallback, ProgressCallback, resLoader } from "./ResLoader";
+import { resLoader } from "./ResLoader";
+import { AssetType, CompleteCallback, IRemoteOptions, ProgressCallback, ResUtil } from "./ResUtil";
 /**
  * 资源引用类
  * 1. 提供加载功能，并记录加载过的资源
@@ -23,17 +24,32 @@ export class ResKeeper extends Component {
      * @param onProgess     加载进度回调
      * @param onCompleted   加载完成回调
      */
-    public load<T extends Asset>(bundleName: string, paths: string | string[], type: AssetType<T> | null, onProgress: ProgressCallback | null, onComplete: CompleteCallback<T> | null): void;
-    public load<T extends Asset>(bundleName: string, paths: string | string[], onProgress: ProgressCallback | null, onComplete: CompleteCallback<T> | null): void;
-    public load<T extends Asset>(bundleName: string, paths: string | string[], onComplete?: CompleteCallback<T> | null): void;
-    public load<T extends Asset>(bundleName: string, paths: string | string[], type: AssetType<T> | null, onComplete?: CompleteCallback<T> | null): void;
-    public load<T extends Asset>(paths: string | string[], type: AssetType<T> | null, onProgress: ProgressCallback | null, onComplete: CompleteCallback<T> | null): void;
-    public load<T extends Asset>(paths: string | string[], onProgress: ProgressCallback | null, onComplete: CompleteCallback<T> | null): void;
-    public load<T extends Asset>(paths: string | string[], onComplete?: CompleteCallback<T> | null): void;
-    public load<T extends Asset>(paths: string | string[], type: AssetType<T> | null, onComplete?: CompleteCallback<T> | null): void;
-    public load(...args: any) {
-        // 调用加载接口
-        resLoader.load.apply(resLoader, args);
+     public load<T extends Asset>(paths: string | string[], type: AssetType<T> | null, onProgress: ProgressCallback | null, onComplete: CompleteCallback<T> | null, bundleName?: string): void;
+     public load<T extends Asset>(paths: string | string[], onProgress: ProgressCallback | null, onComplete: CompleteCallback<T> | null, bundleName?: string): void;
+     public load<T extends Asset>(paths: string | string[], onComplete?: CompleteCallback<T> | null, bundleName?: string): void;
+     public load<T extends Asset>(paths: string | string[], type: AssetType<T> | null, onComplete?: CompleteCallback<T> | null, bundleName?: string): void;
+     public load<T extends Asset>(): void {
+        let args = ResUtil.makeLoadResArgs.apply(this, arguments as any);
+        args!.keeper = this;
+        resLoader.load(args as any);
+    }
+
+    public loadDir<T extends Asset>(dir: string, type: AssetType<T> | null, onProgress: ProgressCallback | null, onComplete: CompleteCallback<T[]> | null, bundleName?: string): void;
+    public loadDir<T extends Asset>(dir: string, onProgress: ProgressCallback | null, onComplete: CompleteCallback<T[]> | null, bundleName?: string): void;
+    public loadDir<T extends Asset>(dir: string, onComplete?: CompleteCallback<T[]> | null, bundleName?: string): void;
+    public loadDir<T extends Asset>(dir: string, type: AssetType<T> | null, onComplete?: CompleteCallback<T[]> | null, bundleName?: string): void;
+    public loadDir<T extends Asset>(): void {
+        let args = ResUtil.makeLoadResArgs.apply(this, arguments as any);
+        args!.keeper = this;
+        resLoader.loadDir(args as any);
+    }
+
+    public loadRemote<T extends Asset>(url: string, options: IRemoteOptions | null, onComplete?: CompleteCallback<T> | null): void;
+    public loadRemote<T extends Asset>(url: string, onComplete?: CompleteCallback<T> | null): void;
+    public loadRemote<T extends Asset>(): void {
+        let args = ResUtil.makeLoadResArgs.apply(this, arguments as any);
+        args!.keeper = this;
+        resLoader.loadRemote(args as any);
     }
 
     /**

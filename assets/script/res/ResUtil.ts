@@ -12,49 +12,50 @@ import { ResKeeper } from "./ResKeeper";
  export type AssetType<T = Asset> = Constructor<T>;
 
  export interface ILoadResArgs<T extends Asset> {
-    paths?: string | string[];                  // 资源路径
-    dir?: string;                               // 目录
-    type?: AssetType<T> | null;                 // 资源类型
-    options?: IRemoteOptions | null;            // 远程资源可选参数
-    onProgress?: ProgressCallback | null;       // 加载进度回调
+    paths?: string | string[];                                          // 资源路径
+    dir?: string;                                                       // 目录
+    type?: AssetType<T> | null;                                         // 资源类型
+    options?: IRemoteOptions | null;                                    // 远程资源可选参数
+    onProgress?: ProgressCallback | null;                               // 加载进度回调
     onComplete?: CompleteCallback<T> | CompleteCallback<T[]> | null;    // 加载完成回调
-    bundleName?: string;                        // bundle名
+    bundleName?: string;                                                // bundle名
+    keeper?: ResKeeper;                                                 // 资源引用类实例
 }
 
 export class ResUtil {
     /**
      * 构建bundle内资源加载参数结构体
      */
-    public static makeLoadResArgs<T extends Asset>(...args: any[]): ILoadResArgs<T> | null {
-        if (args.length < 1) {
-            console.error(`makeLoadResArgs error ${args}`);
+    public static makeLoadResArgs<T extends Asset>(): ILoadResArgs<T> | null {
+        if (arguments.length < 1) {
+            console.error(`makeLoadResArgs error ${arguments}`);
             return null;
         }
 
         let resArgs: ILoadResArgs<T> = { bundleName: "resources" };
-        if (typeof args[0] == "string") {
-            resArgs.paths = args[0];
-        } else if (args[0] instanceof Array) {
-            resArgs.paths = args[0];
-        }else if (args[0] instanceof Object) {
-            return args[0];    // 已经是 ILoadResArgs
+        if (typeof arguments[0] == "string") {
+            resArgs.paths = arguments[0];
+        } else if (arguments[0] instanceof Array) {
+            resArgs.paths = arguments[0];
+        }else if (arguments[0] instanceof Object) {
+            return arguments[0];    // 已经是 ILoadResArgs
         } else {
-            console.error(`makeLoadResArgs error ${args}`);
+            console.error(`makeLoadResArgs error ${arguments}`);
             return null;
         }
 
-        for (let i = 1; i < args.length; ++i) {
-            if (i == 1 && js.isChildClassOf(args[i], Asset)) {
+        for (let i = 1; i < arguments.length; ++i) {
+            if (i == 1 && js.isChildClassOf(arguments[i], Asset)) {
                 // 判断是不是第一个参数type
-                resArgs.type = args[i];
-            } else if (typeof args[i] == "string") {
-                resArgs.bundleName = args[i];
-            } else if (typeof args[i] == "function") {
+                resArgs.type = arguments[i];
+            } else if (typeof arguments[i] == "string") {
+                resArgs.bundleName = arguments[i];
+            } else if (typeof arguments[i] == "function") {
                 // 其他情况为函数
-                if (args.length > i + 1 && typeof args[i + 1] == "function") {
-                    resArgs.onProgress = args[i];
+                if (arguments.length > i + 1 && typeof arguments[i + 1] == "function") {
+                    resArgs.onProgress = arguments[i];
                 } else {
-                    resArgs.onComplete = args[i];
+                    resArgs.onComplete = arguments[i];
                 }
             }
         }
@@ -65,52 +66,31 @@ export class ResUtil {
     /**
      * 构建远程资源加载参数结构体
      */
-     public static makeLoadRemoteArgs<T extends Asset>(...args: any[]): ILoadResArgs<T> | null {
-        if (args.length < 1) {
-            console.error(`makeLoadRemoteArgs error ${args}`);
+     public static makeLoadRemoteArgs<T extends Asset>(): ILoadResArgs<T> | null {
+        if (arguments.length < 1) {
+            console.error(`makeLoadRemoteArgs error ${arguments}`);
             return null;
         }
 
         let resArgs: ILoadResArgs<T> = {};
-        if (typeof args[0] == "string") {
-            resArgs.dir = args[0];
-        } else if (args[0] instanceof Object) {
-            return args[0];    // 已经是 ILoadResArgs
+        if (typeof arguments[0] == "string") {
+            resArgs.dir = arguments[0];
+        } else if (arguments[0] instanceof Object) {
+            return arguments[0];    // 已经是 ILoadResArgs
         } else {
-            console.error(`makeLoadRemoteArgs error ${args}`);
+            console.error(`makeLoadRemoteArgs error ${arguments}`);
             return null;
         }
 
-        for (let i = 1; i < args.length; ++i) {
-            if (typeof args[i] == "function") {
-                resArgs.onComplete = args[i];
-            } else if (args[i] instanceof Object) {
-                resArgs.options = args[i];
+        for (let i = 1; i < arguments.length; ++i) {
+            if (typeof arguments[i] == "function") {
+                resArgs.onComplete = arguments[i];
+            } else if (arguments[i] instanceof Object) {
+                resArgs.options = arguments[i];
             }
         }
 
         return resArgs;
-    }
-
-    /**
-     * 开始加载资源
-     * @param bundle        assetbundle的路径
-     * @param url           资源url或url数组
-     * @param type          资源类型，默认为null
-     * @param onProgess     加载进度回调
-     * @param onCompleted   加载完成回调
-     */
-    public static load<T extends Asset>(attachNode: Node, url: string | string[], onCompleted: CompleteCallback<T> | null): void;
-    public static load<T extends Asset>(attachNode: Node, url: string | string[], onProgess: ProgressCallback | null, onCompleted: CompleteCallback<T> | null): void;
-    public static load<T extends Asset>(attachNode: Node, url: string | string[], type: typeof Asset, onCompleted: CompleteCallback<T> | null): void;
-    public static load<T extends Asset>(attachNode: Node, url: string | string[], type: typeof Asset, onProgess: ProgressCallback | null, onCompleted: CompleteCallback<T> | null): void;
-    public static load<T extends Asset>(attachNode: Node, bundle: string, url: string | string[], onCompleted: CompleteCallback<T> | null): void;
-    public static load<T extends Asset>(attachNode: Node, bundle: string, url: string | string[], onProgess: ProgressCallback | null, onCompleted: CompleteCallback<T> | null): void;
-    public static load<T extends Asset>(attachNode: Node, bundle: string, url: string | string[], type: typeof Asset, onCompleted: CompleteCallback<T> | null): void;
-    public static load<T extends Asset>(attachNode: Node, bundle: string, url: string | string[], type: typeof Asset, onProgess: ProgressCallback | null, onCompleted: CompleteCallback<T> | null): void;
-    public static load<T extends Asset>(attachNode: Node, ...args: any): void {
-        let keeper = ResUtil.getResKeeper(attachNode);
-        keeper!.load.apply(keeper, args);
     }
 
     /**

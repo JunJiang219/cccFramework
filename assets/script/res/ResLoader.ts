@@ -6,7 +6,8 @@
  * 2021-1-24 by 宝爷
  */
 
-import { Asset, resources, assetManager, AssetManager } from "cc";
+import { Asset, resources, assetManager, AssetManager, isValid } from "cc";
+import { ResLeakChecker } from "./ResLeakChecker";
 import { AssetType, CompleteCallback, ILoadResArgs, IRemoteOptions, ProgressCallback, ResUtil } from "./ResUtil";
 
 export class ResLoader {
@@ -18,13 +19,28 @@ export class ResLoader {
     }
 
     private _loadByBundleAndArgs<T extends Asset>(bundle: AssetManager.Bundle, args: ILoadResArgs<T>): void {
+        let finishCb: CompleteCallback<T> | CompleteCallback<T[]> | null = (err, assets) => {
+            if (!err) {
+                if (assets instanceof Array) {
+                    for (let i = 0; i < assets.length; ++i) {
+                        ResLeakChecker.getInstance().traceAsset(assets[i]);
+                        if (isValid(args.keeper)) args.keeper?.cacheAsset(assets[i]);
+                    }
+                } else {
+                    ResLeakChecker.getInstance().traceAsset(assets);
+                    if (isValid(args.keeper)) args.keeper?.cacheAsset(assets);
+                }
+            }
+            if (args.onComplete) args.onComplete(err, assets);
+        }
+
         if (args.dir) {
-            bundle.loadDir(args.dir, args.type!, args.onProgress!, args.onComplete!);
+            bundle.loadDir(args.dir, args.type!, args.onProgress!, finishCb);
         } else {
             if (typeof args.paths == 'string') {
-                bundle.load(args.paths, args.type!, args.onProgress!, args.onComplete!);
+                bundle.load(args.paths, args.type!, args.onProgress!, finishCb);
             } else {
-                bundle.load(args.paths as string[], args.type!, args.onProgress!, args.onComplete!);
+                bundle.load(args.paths as string[], args.type!, args.onProgress!, finishCb);
             }    
         }
     }
@@ -47,32 +63,63 @@ export class ResLoader {
         }
     }
 
+    /**
+     * 加载单个或一组资源
+     * @param paths 资源路径
+     * @param type 资源类型
+     * @param onProgress 加载进度回调
+     * @param onComplete 加载完成回调
+     * @param bundleName bundle名
+     */
     public load<T extends Asset>(paths: string | string[], type: AssetType<T> | null, onProgress: ProgressCallback | null, onComplete: CompleteCallback<T> | null, bundleName?: string): void;
     public load<T extends Asset>(paths: string | string[], onProgress: ProgressCallback | null, onComplete: CompleteCallback<T> | null, bundleName?: string): void;
     public load<T extends Asset>(paths: string | string[], onComplete?: CompleteCallback<T> | null, bundleName?: string): void;
     public load<T extends Asset>(paths: string | string[], type: AssetType<T> | null, onComplete?: CompleteCallback<T> | null, bundleName?: string): void;
-    public load(...args: any[]): void {
-        let resArgs = ResUtil.makeLoadResArgs.apply(this, args);
-        if (resArgs) this._loadByArgs(resArgs);
+    public load<T extends Asset>(): void {
+        let args = ResUtil.makeLoadResArgs.apply(this, arguments as any);
+        if (args) this._loadByArgs(args);
     }
 
+    /**
+     * 加载指定目录资源
+     * @param dir 目录
+     * @param type 资源类型
+     * @param onProgress 加载进度回调
+     * @param onComplete 加载完成回调
+     * @param bundleName bundle名
+     */
     public loadDir<T extends Asset>(dir: string, type: AssetType<T> | null, onProgress: ProgressCallback | null, onComplete: CompleteCallback<T[]> | null, bundleName?: string): void;
     public loadDir<T extends Asset>(dir: string, onProgress: ProgressCallback | null, onComplete: CompleteCallback<T[]> | null, bundleName?: string): void;
     public loadDir<T extends Asset>(dir: string, onComplete?: CompleteCallback<T[]> | null, bundleName?: string): void;
     public loadDir<T extends Asset>(dir: string, type: AssetType<T> | null, onComplete?: CompleteCallback<T[]> | null, bundleName?: string): void;
-    public loadDir(...args: any[]): void {
-        let resArgs = ResUtil.makeLoadResArgs.apply(this, args);
-        if (resArgs) {
-            resArgs.dir = resArgs.paths as string;
-            this._loadByArgs(resArgs);
+    public loadDir<T extends Asset>(): void {
+        let args = ResUtil.makeLoadResArgs.apply(this, arguments as any);
+        if (args) {
+            args.dir = args.paths as string;
+            this._loadByArgs(args);
         }
     }
 
+    /**
+     * 加载远程资源
+     * @param url 远程地址
+     * @param options 可选参数
+     * @param onComplete 加载完成回调
+     */
     public loadRemote<T extends Asset>(url: string, options: IRemoteOptions | null, onComplete?: CompleteCallback<T> | null): void;
     public loadRemote<T extends Asset>(url: string, onComplete?: CompleteCallback<T> | null): void;
-    public loadRemote(...args: any[]): void {
-        let resArgs = ResUtil.makeLoadResArgs.apply(this, args);
-        if (resArgs) assetManager.loadRemote(resArgs.paths as string, resArgs.options!, resArgs.onComplete);
+    public loadRemote<T extends Asset>(): void {
+        let args = ResUtil.makeLoadResArgs.apply(this, arguments as any);
+        if (args) {
+            let finishCb: CompleteCallback<T> | CompleteCallback<T[]> | null = (err, assets) => {
+                if (!err) {
+                    ResLeakChecker.getInstance().traceAsset(assets);
+                    if (isValid(args!.keeper)) args!.keeper!.cacheAsset(assets);
+                }
+                if (args!.onComplete) args!.onComplete(err, assets);
+            }
+            assetManager.loadRemote(args.paths as string, args.options!, finishCb);
+        }
     }
 }
 
