@@ -9,40 +9,40 @@ import { resLoader } from "./ResLoader";
  * 
  * 2020-1-19 by 宝爷
  */
-export type NodePoolCallback = (error: Error | null, nodePool: NodePool) => void;
+export type NodePoolExCallback = (error: Error | null, nodePool: NodePoolEx) => void;
 
-export class NodePool {
+export class NodePoolEx {
     private _isReady: boolean = false;
     private _createCount: number = 0;
-    private _warterMark: number = 10;
+    private _waterMark: number = 10;
     private _res: Prefab | null = null;
-    private _nodes: Array<Node> = new Array<Node>();
+    private _nodes: Node[] = [];
     public isReady() { return this._isReady; }
     /**
-     * 初始化NodePool，可以传入使用resloader加载的prefab，或者传入url异步加载
+     * 初始化NodePool，可以传入使用resLoader加载的prefab，或者传入url异步加载
      * 如果使用url来初始化，需要检查isReady，否则获取node会返回null
      * @param prefab 
      * @param url
      */
     public init(prefab: Prefab) : void
-    public init(url: string, finishCallback: NodePoolCallback) : void
-    public init(urlOrPrefab : Prefab | string, finishCallback?: NodePoolCallback) {
+    public init(url: string, finishCallback: NodePoolExCallback) : void
+    public init(urlOrPrefab : Prefab | string, finishCallback?: NodePoolExCallback) {
         if (urlOrPrefab instanceof Prefab) {
             this._res = urlOrPrefab;
-            urlOrPrefab.addRef();
+            this._res.addRef();
+            this._isReady = true;
         } else {
-            resLoader.load(urlOrPrefab, Prefab, (error, prefab) => {
+            resLoader.load(urlOrPrefab, Prefab, (error, prefab: Prefab) => {
                 if (!error) {
                     this._res = prefab;
+                    this._res.addRef();
                     this._isReady = true;
                 }
                 if (finishCallback) {
                     finishCallback(error, this);
                 }
             });
-            return;
         }
-        console.error(`NodePool init error ${arguments[0]}`);
     }
 
     /**
@@ -64,12 +64,12 @@ export class NodePool {
      * @param node 要回收的Prefab实例
      */
     public freeNode(node: Node) {
-        if (!(node && isValid(node))) {
+        if (!isValid(node)) {
             error('[ERROR] PrefabPool: freePrefab: isValid node');
             this._createCount--;
             return;
         }
-        if (this._warterMark < this._nodes.length) {
+        if (this._waterMark < this._nodes.length) {
             this._createCount--;
             node.destroy();
         } else {
@@ -79,10 +79,10 @@ export class NodePool {
     }
     /**
      * 设置回收水位
-     * @param waterMakr 水位
+     * @param waterMark 水位
      */
-    public setWaterMark(waterMakr: number) {
-        this._warterMark = waterMakr;
+    public setWaterMark(waterMark: number) {
+        this._waterMark = waterMark;
     }
     /**
      * 池子里的prefab是否都没有使用
@@ -96,15 +96,16 @@ export class NodePool {
     /**
      * 清空prefab
      */
-    public destory() {
+    public destroy() {
         // 清空节点、回收资源
-        for (let node of this._nodes) {
-            node.destroy();
+        for (let i = 0, len = this._nodes.length; i < len; ++i) {
+            this._nodes[i].destroy();
         }
         this._createCount -= this._nodes.length;
         this._nodes.length = 0;
         if (this._res) {
             this._res.decRef();
+            this._res = null;
         }
     }
 }

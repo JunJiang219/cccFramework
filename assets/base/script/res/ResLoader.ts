@@ -21,14 +21,15 @@ export class ResLoader {
     private _loadByBundleAndArgs<T extends Asset>(bundle: AssetManager.Bundle, args: ILoadResArgs<T>): void {
         let finishCb: CompleteCallback<T> | CompleteCallback<T[]> | null = (err, assets) => {
             if (!err) {
+                let isValid_keeper = isValid(args.keeper);
                 if (assets instanceof Array) {
-                    for (let i = 0; i < assets.length; ++i) {
+                    for (let i = 0, len = assets.length; i < len; ++i) {
                         ResLeakChecker.getInstance().traceAsset(assets[i]);
-                        if (isValid(args.keeper)) args.keeper?.cacheAsset(assets[i]);
+                        isValid_keeper && args.keeper?.cacheAsset(assets[i]);
                     }
                 } else {
                     ResLeakChecker.getInstance().traceAsset(assets);
-                    if (isValid(args.keeper)) args.keeper?.cacheAsset(assets);
+                    isValid_keeper && args.keeper?.cacheAsset(assets);
                 }
             }
             if (args.onComplete) args.onComplete(err, assets);
@@ -109,12 +110,12 @@ export class ResLoader {
     public loadRemote<T extends Asset>(url: string, options: IRemoteOptions | null, onComplete?: CompleteCallback<T> | null): void;
     public loadRemote<T extends Asset>(url: string, onComplete?: CompleteCallback<T> | null): void;
     public loadRemote<T extends Asset>(): void {
-        let args = ResUtil.makeLoadResArgs.apply(this, arguments as any);
+        let args = ResUtil.makeLoadRemoteArgs.apply(this, arguments as any);
         if (args) {
             let finishCb: CompleteCallback<T> | CompleteCallback<T[]> | null = (err, assets) => {
                 if (!err) {
                     ResLeakChecker.getInstance().traceAsset(assets);
-                    if (isValid(args!.keeper)) args!.keeper!.cacheAsset(assets);
+                    isValid(args!.keeper) && args!.keeper!.cacheAsset(assets);
                 }
                 if (args!.onComplete) args!.onComplete(err, assets);
             }

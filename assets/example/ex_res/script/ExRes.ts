@@ -1,8 +1,7 @@
 
-import { _decorator, Component, SpriteFrame, Sprite, EventTouch, assetManager, resources, Texture2D } from 'cc';
-import { ResLeakChecker } from '../../../script/res/ResLeakChecker';
-import { resLoader } from '../../../script/res/ResLoader';
-import { ResUtil } from '../../../script/res/ResUtil';
+import { _decorator, Component, SpriteFrame, Sprite, EventTouch, assetManager, resources } from 'cc';
+import { ResLeakChecker } from '../../../base/script/res/ResLeakChecker';
+import { resLoader } from '../../../base/script/res/ResLoader';
 const { ccclass, property } = _decorator;
 
 @ccclass('ExRes')
@@ -12,7 +11,25 @@ export class ExRes extends Component {
     spr: Sprite = null!;
 
     start() {
+        this._initProj();
+    }
+
+    private async _initProj(): Promise<void> {
+        await this.loadBundle('base');
+        this._afterInitProj();
+    }
+
+    private _afterInitProj() {
         ResLeakChecker.getInstance().startCheck();
+    }
+
+    public async loadBundle(bundleName: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            assetManager.loadBundle(bundleName, (err, bundle) => {
+                if (err) return reject();
+                resolve();
+            })
+        })
     }
 
     public loadSprite(path: string) {

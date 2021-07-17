@@ -19,7 +19,7 @@ import { ResKeeper } from "./ResKeeper";
     onProgress?: ProgressCallback | null;                               // 加载进度回调
     onComplete?: CompleteCallback<T> | CompleteCallback<T[]> | null;    // 加载完成回调
     bundleName?: string;                                                // bundle名
-    keeper?: ResKeeper;                                                 // 资源引用类实例
+    keeper?: ResKeeper;                                                 // 资源通过某 ResKeeper 加载
 }
 
 export class ResUtil {

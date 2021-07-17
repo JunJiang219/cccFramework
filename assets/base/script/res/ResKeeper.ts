@@ -13,8 +13,8 @@ const { ccclass } = _decorator;
 
 @ccclass
 export class ResKeeper extends Component {
-
-    private resCache = new Set<Asset>();
+    // 缓存资源记录
+    private _resCache = new Set<Asset>();
 
     /**
      * 开始加载资源
@@ -47,7 +47,7 @@ export class ResKeeper extends Component {
     public loadRemote<T extends Asset>(url: string, options: IRemoteOptions | null, onComplete?: CompleteCallback<T> | null): void;
     public loadRemote<T extends Asset>(url: string, onComplete?: CompleteCallback<T> | null): void;
     public loadRemote<T extends Asset>(): void {
-        let args = ResUtil.makeLoadResArgs.apply(this, arguments as any);
+        let args = ResUtil.makeLoadRemoteArgs.apply(this, arguments as any);
         args!.keeper = this;
         resLoader.loadRemote(args as any);
     }
@@ -57,9 +57,9 @@ export class ResKeeper extends Component {
      * @param asset 
      */
     public cacheAsset(asset: Asset) {
-        if (!this.resCache.has(asset)) {
+        if (!this._resCache.has(asset)) {
             asset.addRef();
-            this.resCache.add(asset);
+            this._resCache.add(asset);
         }
     }
 
@@ -74,9 +74,9 @@ export class ResKeeper extends Component {
      * 释放资源，组件销毁时自动调用
      */
     public releaseAssets() {
-        this.resCache.forEach(element => {
+        this._resCache.forEach(element => {
             element.decRef();
         });
-        this.resCache.clear();
+        this._resCache.clear();
     }
 }
