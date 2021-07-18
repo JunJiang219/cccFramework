@@ -4,6 +4,13 @@
 
 export class ComUtil {
 
+    // 检测有效url
+    public static checkURL(url: string) {
+        if (-1 != url.indexOf('http://')) return true;
+        if (-1 != url.indexOf('https://')) return true;
+        return false;
+    }
+
     // 深度拷贝 dstObj 需要是{} 或者 [],如果是null ,那么是返回值。
     public static deepClone(srcObj: any, dstObj: any) {
         if (!srcObj) {

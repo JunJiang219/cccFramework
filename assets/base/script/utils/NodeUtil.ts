@@ -1,3 +1,6 @@
+/**
+ * 节点工具类
+ */
 import { Node, UITransform, v2, Vec2 } from "cc";
 import { view } from "cc";
 import { sys } from "cc";
