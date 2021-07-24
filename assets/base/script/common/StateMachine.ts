@@ -11,6 +11,15 @@ const fsm_defaults = {
     }
 }
 
+// 状态转换的生命周期
+export const fsm_lifecycle = {
+    onBeforeTransition: "onBeforeTransition",
+    onLeaveState: "onLeaveState",
+    onTransition: "onTransition",
+    onEnterState: "onEnterState",
+    onAfterTransition: "onAfterTransition"
+}
+
 export interface IFsmTransition {
     name?: string,
     from?: string | string[],
@@ -20,6 +29,7 @@ export interface IFsmTransition {
 export interface IFsmInitObj {
     init?: string,
     transitions?: IFsmTransition[],
+    methods?: { [lifecycle: string]: Function }
 }
 
 interface IFsmLifecycle {
@@ -29,6 +39,30 @@ interface IFsmLifecycle {
     onEnterState?: { [stateName: string]: string },
     onAfterTransition?: { [transitName: string]: string },
 }
+
+function camelize(label: string) {
+
+    if (label.length === 0)
+      return label;
+  
+    var n, result, word, words = label.split(/[_-]/);
+  
+    // single word with first character already lowercase, return untouched
+    if ((words.length === 1) && (words[0][0].toLowerCase() === words[0][0]))
+      return label;
+  
+    result = words[0].toLowerCase();
+    for(n = 1 ; n < words.length ; n++) {
+      result = result + words[n].charAt(0).toUpperCase() + words[n].substring(1).toLowerCase();
+    }
+  
+    return result;
+}
+
+function camelize_prepended(prepend: string, label: string) {
+    label = camelize(label);
+    return prepend + label[0].toUpperCase() + label.substring(1);
+  }
 
 export class StateMachine {
     private _state: string = "";            // 当前状态
@@ -98,10 +132,12 @@ export class StateMachine {
         }
     }
 
+    // 无效转换
     private _onInvalidTransition(transitName: string, from: string, to: string) {
         console.error("transition is invalid in current state", transitName, from, to, this._state);
     }
     
+    // 转换进行中
     private _onPendingTransition(transitName: string, from: string, to: string) {
         console.warn("transition is invalid while previous transition is still in progress", transitName, from, to, this._state);
     }
