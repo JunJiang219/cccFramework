@@ -2,22 +2,15 @@
 //  * 状态机
 //  */
 
+// import { ComUtil } from "../utils/ComUtil";
+
 // // 状态机默认值
 // const fsm_defaults = {
 //     wildcard: "*",
 //     init: {
-//         name: 'init',
-//         from: 'none'
-//     }
-// }
-
-// // 状态转换的生命周期
-// export const fsm_lifecycle = {
-//     onBeforeTransition: "onBeforeTransition",
-//     onLeaveState: "onLeaveState",
-//     onTransition: "onTransition",
-//     onEnterState: "onEnterState",
-//     onAfterTransition: "onAfterTransition"
+//       name: 'init',
+//       from: 'none'
+//     },
 // }
 
 // export interface IFsmTransition {
@@ -33,10 +26,10 @@
 // }
 
 // export interface IFsmLifecycleEvent {
-//     onBefore?: { [key: string]: string },
-//     onAfter?:  { [key: string]: string },
-//     onEnter?:  { [key: string]: string },
-//     onLeave?:  { [key: string]: string },
+//     onBefore?: { [transition: string]: string },
+//     onAfter?:  { [transition: string]: string },
+//     onEnter?:  { [state: string]: string },
+//     onLeave?:  { [state: string]: string },
 //     on?:       { [key: string]: string },
 // }
 
@@ -48,35 +41,11 @@
 //     event?: string
 // }
 
-// function camelize(label: string) {
-
-//     if (label.length === 0)
-//       return label;
-  
-//     var n, result, word, words = label.split(/[_-]/);
-  
-//     // single word with first character already lowercase, return untouched
-//     if ((words.length === 1) && (words[0][0].toLowerCase() === words[0][0]))
-//       return label;
-  
-//     result = words[0].toLowerCase();
-//     for(n = 1 ; n < words.length ; n++) {
-//       result = result + words[n].charAt(0).toUpperCase() + words[n].substring(1).toLowerCase();
-//     }
-  
-//     return result;
-// }
-
-// function camelize_prepended(prepend: string, label: string) {
-//     label = camelize(label);
-//     return prepend + label[0].toUpperCase() + label.substring(1);
-//   }
-
 // export class StateMachine {
-//     private _state: string = "";            // 当前状态
-//     private _pending: boolean = false;      // 状态转换中，挂起
-//     private _states: string[] = [];         // 全部状态名
-//     private _transitions: string[] = [];    // 全部转换名
+//     private _state: string = fsm_defaults.init.from;  // 当前状态
+//     private _pending: boolean = false;                // 状态转换中，挂起
+//     private _states: string[] = [];                   // 全部状态名
+//     private _transitions: string[] = [];              // 全部转换名
 //     private _lifecycle: IFsmLifecycleEvent = {};
 //     private observers: any[] = [];
 //     private _map: { [state: string]: { [transition: string]: IFsmTransition } } = {};
@@ -102,9 +71,9 @@
 
 //     // 添加生命周期名 - 状态相关
 //     private _addStateLifecycleNames(name: string) {
-//         this._lifecycle.onEnter![name] = camelize_prepended('onEnter', name);
-//         this._lifecycle.onLeave![name] = camelize_prepended('onLeave', name);
-//         this._lifecycle.on![name]      = camelize_prepended('on',      name);
+//         this._lifecycle.onEnter![name] = ComUtil.camelize_prefix('onEnter', name);
+//         this._lifecycle.onLeave![name] = ComUtil.camelize_prefix('onLeave', name);
+//         this._lifecycle.on![name]      = ComUtil.camelize_prefix('on',      name);
 //     }
 
 //     // 添加转换
@@ -117,9 +86,9 @@
 
 //     // 添加生命周期名 - 转换相关
 //     private _addTransitionLifecycleNames(name: string) {
-//         this._lifecycle.onBefore![name] = camelize_prepended('onBefore', name);
-//         this._lifecycle.onAfter![name]  = camelize_prepended('onAfter',  name);
-//         this._lifecycle.on![name]       = camelize_prepended('on',       name);
+//         this._lifecycle.onBefore![name] = ComUtil.camelize_prefix('onBefore', name);
+//         this._lifecycle.onAfter![name]  = ComUtil.camelize_prefix('onAfter',  name);
+//         this._lifecycle.on![name]       = ComUtil.camelize_prefix('on',       name);
 //     }
 
 //     // 配置单条转换信息
@@ -134,7 +103,7 @@
 //         return transition;
 //     }
 
-//     // 配置默认生命周期名
+//     // 配置通用生命周期名
 //     private _configureLifecycle() {
 //         this._lifecycle = {
 //           onBefore: { transition: 'onBeforeTransition' },
@@ -231,12 +200,12 @@
 //     private _doTransit(lifecycle) { this._state = lifecycle.to; }
 
 //     // 无效转换
-//     private _onInvalidTransition(transition: string, from: string, to: string) {
+//     public onInvalidTransition(transition: string, from: string, to: string) {
 //         console.error("transition is invalid in current state", transition, from, to, this._state);
 //     }
     
 //     // 转换进行中
-//     private _onPendingTransition(transition: string, from: string, to: string) {
+//     public onPendingTransition(transition: string, from: string, to: string) {
 //         console.warn("transition is invalid while previous transition is still in progress", transition, from, to, this._state);
 //     }
 // }

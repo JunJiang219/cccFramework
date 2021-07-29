@@ -191,4 +191,29 @@ export class ComUtil {
         let retStr = ComUtil.formatNum(numKMB, n, 1) + kmb;
         return retStr;
     }
+
+    // 字符串驼峰化
+    public static camelize(label: string) {
+        if (label.length === 0)
+          return label;
+      
+        var n, result, words = label.split(/[_-]/);
+      
+        // single word with first character already lowercase, return untouched
+        if ((words.length === 1) && (words[0][0].toLowerCase() === words[0][0]))
+          return label;
+      
+        result = words[0].toLowerCase();
+        for(n = 1 ; n < words.length ; n++) {
+          result = result + words[n].charAt(0).toUpperCase() + words[n].substring(1).toLowerCase();
+        }
+      
+        return result;
+    }
+    
+    // 字符串驼峰化 + 前缀
+    public static camelize_prefix(prefix: string, label: string) {
+        label = ComUtil.camelize(label);
+        return prefix + label[0].toUpperCase() + label.substring(1);
+    }
 }
