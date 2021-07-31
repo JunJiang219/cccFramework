@@ -1,8 +1,16 @@
 
 import { _decorator, Component, SpriteFrame, Sprite, EventTouch, assetManager, resources } from 'cc';
+import { IFsmInitObj, StateMachine } from '../../../base/script/common/StateMachine';
 import { ResLeakChecker } from '../../../base/script/res/ResLeakChecker';
 import { resLoader } from '../../../base/script/res/ResLoader';
 const { ccclass, property } = _decorator;
+
+class Test extends StateMachine {
+    public constructor(param: IFsmInitObj, a: string) {
+        super(param);
+        console.log(a);
+    }
+}
 
 @ccclass('ExRes')
 export class ExRes extends Component {
@@ -10,8 +18,46 @@ export class ExRes extends Component {
     @property(Sprite)
     spr: Sprite = null!;
 
+    private _num: number = 10;
+
     start() {
         this._initProj();
+        let test = new Test({
+            init: 'solid',
+            transitions: [
+                { name: 'melt',     from: 'solid',  to: 'liquid' },
+                { name: 'freeze',   from: 'liquid', to: 'solid'  },
+                { name: 'vaporize', from: 'liquid', to: 'gas'    },
+                { name: 'condense', from: 'gas',    to: 'liquid' },
+                { name: 'goto',     from: '*',      to: this.abc.bind(this) }
+            ],
+            methods: {
+                onBeforeTransition: function() { console.log('onBeforeTransition', arguments) },
+                onAfterTransition: function() { console.log('onAfterTransition', arguments) },
+                onEnterState: function() { console.log('onEnterState', arguments) },
+                onLeaveState: function() { console.log('onLeaveState', arguments) },
+                onTransition: function() { console.log('onTransition', arguments) },
+                onLeaveSolid: function() { 
+                    console.log('onXxx');
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            resolve("onLiquid - setTimeout");
+                        }, 5000);
+                    })
+                },
+                onPendingTransition: function(transition: string, from: string, to: string) {
+                    console.log('onPendingTransition');
+                },
+            }
+        }, "abc");
+        console.log(test.allStates());
+        test.execTransit('goto', 'xxx');
+        test.execTransit('goto', 'liquid');
+    }
+
+    public abc(s: string) {
+        console.log('abc - num: ' + this._num);
+        return s;
     }
 
     private async _initProj(): Promise<void> {

@@ -1,5 +1,10 @@
 /**
- * 状态机
+ * 状态机（借鉴仓库 https://github.com/jakesgordon/javascript-state-machine，接口用法与其基本保持一致，可参考其使用文档）
+ * 
+ * 1. 生命周期事件顺序：onBeforeTransition - onBefore<TRANSITION> - onLeaveState - onLeave<STATE> - onTransition - onEnterState - 
+ *                      onEnter<STATE> - on<STATE> - onAfterTransition - onAfter<TRANSITION> - on<TRANSITION>
+ * 2. 生命周期详细介绍（https://github.com/jakesgordon/javascript-state-machine/blob/master/docs/lifecycle-events.md）
+ * 
  */
 
 import { ComUtil } from "../utils/ComUtil";
@@ -55,7 +60,7 @@ export class StateMachine {
     }
 
     // 重置状态机
-    public resetFsm() {
+    private _resetFsm() {
         this._state = fsm_defaults.init.from;
         this._pending = false;
         this._states = [];
@@ -67,7 +72,7 @@ export class StateMachine {
 
     // 初始化状态机
     public initFsm(param: IFsmInitObj) {
-        this.resetFsm();
+        this._resetFsm();
         this._configureLifecycle();
         let initTransition = this._configureInitTransition(param.init);
         this.configureTransitions(param.transitions);
@@ -79,6 +84,18 @@ export class StateMachine {
     public allStates() { return this._states; }             // 全部状态
     public allTransitions() { return this._transitions; }   // 全部转换名
     public isPending() { return this._pending; }            // 是否转换中
+    // 当前是否处于某状态或某组状态中
+    public is(state: string | string[]) {
+        return Array.isArray(state) ? (state.indexOf(this.state) >= 0) : (this.state === state);
+    }
+    // 是否可以转换
+    public can(transition: string) {
+        return !this.isPending() && !!this._seek(transition);
+    }
+    // 是否禁止转换
+    public cannot(transition: string) {
+        return !this.can(transition);
+    }
 
     // 获取转换配置
     public transitionFor(state: string, transition: string): IFsmTransition | null {
@@ -124,7 +141,7 @@ export class StateMachine {
     }
 
     // 配置单条转换信息
-    public mapTransition(transition: IFsmTransition) {
+    private _mapTransition(transition: IFsmTransition) {
         var name = transition.name as string,
             from = transition.from as string,
             to   = transition.to;
@@ -142,7 +159,7 @@ export class StateMachine {
           onAfter:  { transition: 'onAfterTransition'  },
           onEnter:  { state:      'onEnterState'       },
           onLeave:  { state:      'onLeaveState'       },
-          on:       { transition: 'onTransition'       }
+          on:       { transition: 'onTransition'       },
         };
     }
 
@@ -150,9 +167,9 @@ export class StateMachine {
     private _configureInitTransition(init?: string | IFsmTransition): IFsmTransition {
         let transition: IFsmTransition = {};
         if (typeof init === "string") {
-            transition = this.mapTransition({ name: 'init', from: fsm_defaults.init.from, to: init })
+            transition = this._mapTransition({ name: 'init', from: fsm_defaults.init.from, to: init })
         } else if (typeof init === "object") {
-            transition = this.mapTransition(init);
+            transition = this._mapTransition(init);
         } else {
             this._addState(fsm_defaults.init.from);
             transition = fsm_defaults.init;
@@ -166,12 +183,12 @@ export class StateMachine {
         if (!transitions) return;
         var i, n, transition, from, to, wildcard = fsm_defaults.wildcard;
         for(n = 0 ; n < transitions.length ; n++) {
-          transition = transitions[n];
-          from  = Array.isArray(transition.from) ? transition.from : [transition.from || wildcard]
-          to    = transition.to || wildcard;
-          for(i = 0 ; i < from.length ; i++) {
-            this.mapTransition({ name: transition.name, from: from[i], to: to });
-          }
+            transition = transitions[n];
+            from = Array.isArray(transition.from) ? transition.from : [transition.from || wildcard];
+            to = transition.to || wildcard;
+            for(i = 0 ; i < from.length ; i++) {
+                this._mapTransition({ name: transition.name, from: from[i], to: to });
+            }
         }
     }
 
@@ -183,29 +200,38 @@ export class StateMachine {
         }
     }
 
-    public seek(transition: string, args: any[]) {
+    private _seek(transition: string, args?: any[]) {
         let wildcard = fsm_defaults.wildcard,
             entry    = this.transitionFor(this.state, transition),
             to       = entry && entry.to;
         if (typeof to === 'function')
-            return to(...args);
+            if (args) {
+                return to(...args);
+            } else {
+                return to();
+            }
         else if (to === wildcard)
-          return this.state
+            return this.state
         else
-          return to
+            return to
     }
 
-    // 触发转换
+    /**
+     * 触发转换
+     * @param transition 转换名
+     * @param args 必填，即使是空数组
+     * @returns 
+     */
     private _fire(transition: string, args: any[]) {
-        return this._transit(transition, this.state, this.seek(transition, args), args);
+        return this._transit(transition, this.state, this._seek(transition, args), args);
     }
 
     /**
      * 执行转换
-     * @param transition 
-     * @param from 
-     * @param to 
-     * @param args 
+     * @param transition 转换名
+     * @param from 起始状态
+     * @param to 终止状态
+     * @param args 必填，即使是空数组
      */
     private _transit(transition: string, from: string, to: string, args: any[]) {
         let lifecycle = this._lifecycleEvents,
@@ -267,7 +293,7 @@ export class StateMachine {
         if ('doTransit' == event) {
             result = this._doTransit(args[0]);
         } else {
-            result = this._eventCallbacks[event](args);
+            if (this._eventCallbacks[event]) result = this._eventCallbacks[event](args);
         }
         if (result && typeof result.then === 'function') {
             return result.then(this._observeEvents.bind(this, events, args, event))
@@ -286,12 +312,20 @@ export class StateMachine {
 
     // 无效转换
     public onInvalidTransition(transition: string, from: string, to: string) {
-        console.error("transition is invalid in current state", transition, from, to, this._state);
+        if (this._eventCallbacks.onInvalidTransition) {
+            this._eventCallbacks.onInvalidTransition(transition, from, to);
+        } else {
+            console.error("transition is invalid in current state - ", transition, from, to, this._state);
+        }
     }
     
     // 转换进行中
     public onPendingTransition(transition: string, from: string, to: string) {
-        console.warn("transition is invalid while previous transition is still in progress", transition, from, to, this._state);
+        if (this._eventCallbacks.onPendingTransition) {
+            this._eventCallbacks.onPendingTransition(transition, from, to);
+        } else {
+            console.warn("transition is invalid while previous transition is still in progress - ", transition, from, to, this._state);
+        }
     }
 
     /**
