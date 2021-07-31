@@ -4,6 +4,9 @@
  * 1. 生命周期事件顺序：onBeforeTransition - onBefore<TRANSITION> - onLeaveState - onLeave<STATE> - onTransition - onEnterState - 
  *                      onEnter<STATE> - on<STATE> - onAfterTransition - onAfter<TRANSITION> - on<TRANSITION>
  * 2. 生命周期详细介绍（https://github.com/jakesgordon/javascript-state-machine/blob/master/docs/lifecycle-events.md）
+ * 3. 执行带参构造或 initFsm() 后，对象才能正常使用
+ * 4. 虽然提供了动态增删【状态、转换、事件监听】（configureTransitions, configureMethods, delTransitions, delMethods, delStates），
+ *    但更建议使用new StateMachine() 或 initFsm() 接口在一开始设置好【状态、转换、事件监听】
  * 
  */
 
@@ -28,7 +31,7 @@ export interface IFsmTransition {
 export interface IFsmInitObj {
     init?: string,
     transitions?: IFsmTransition[],
-    methods?: FsmEventCallbacks
+    methods?: FsmEventCallbacks,
 }
 
 export interface IFsmLifecycleEvents {
@@ -68,6 +71,7 @@ export class StateMachine {
         this._lifecycleEvents = {};
         this._eventCallbacks = {};
         this._map = {};
+        this._map[fsm_defaults.wildcard] = {};
     }
 
     // 初始化状态机
@@ -80,10 +84,11 @@ export class StateMachine {
         if (param.init) this._fire(initTransition.name!, []);
     }
     
-    public get state() { return this._state; }              // 当前状态
-    public allStates() { return this._states; }             // 全部状态
-    public allTransitions() { return this._transitions; }   // 全部转换名
-    public isPending() { return this._pending; }            // 是否转换中
+    public get state() { return this._state; }                          // 当前状态
+    public allStates() { return this._states; }                         // 全部状态
+    public transitions() { return this._transitionsFor(this._state); }   // 当前状态全部可执行转换
+    public allTransitions() { return this._transitions; }               // 全部转换名
+    public isPending() { return this._pending; }                        // 是否转换中
     // 当前是否处于某状态或某组状态中
     public is(state: string | string[]) {
         return Array.isArray(state) ? (state.indexOf(this.state) >= 0) : (this.state === state);
@@ -98,13 +103,13 @@ export class StateMachine {
     }
 
     // 获取转换配置
-    public transitionFor(state: string, transition: string): IFsmTransition | null {
+    private _transitionFor(state: string, transition: string): IFsmTransition | null {
         let wildcard = fsm_defaults.wildcard;
         return this._map[state][transition] || this._map[wildcard][transition];
     }
 
     // 获取指定状态所有可执行转换名
-    public transitionsFor(state: string): string[] {
+    private _transitionsFor(state: string): string[] {
         let wildcard = fsm_defaults.wildcard;
         return Object.keys(this._map[state]).concat(Object.keys(this._map[wildcard]));
     }
@@ -118,11 +123,49 @@ export class StateMachine {
         }
     }
 
+    // 删除状态
+    private _delState(name: string, force: boolean = false) {
+        let wildcard = fsm_defaults.wildcard
+        if (name == wildcard) return false;
+        let transitions = this._transitionsFor(name);
+        let canDel = (force || transitions.length <= 0) ? true : false;
+
+        if (canDel) {
+            let index = this._states.indexOf(name);
+            index >= 0 && this._states.splice(index, 1);
+            this._delStateLifecycleNames(name);
+            delete this._map[name];
+
+            for (let i = 0, len = transitions.length; i < len; ++i) {
+                this._delTransition(transitions[i]);   // 尝试删除该状态下的 transition
+            }
+            return true;
+        }
+
+        return true;
+    }
+
+    // 删除一组状态
+    public delStates(names: string[], force: boolean = false) {
+        if (this.isPending()) return false;
+        for (let i = 0, len = names.length; i < len; ++i) {
+            this._delState(names[i], force);
+        }
+        return true;
+    }
+
     // 添加生命周期名 - 状态相关
     private _addStateLifecycleNames(name: string) {
         this._lifecycleEvents.onEnter![name] = ComUtil.camelize_prefix('onEnter', name);
         this._lifecycleEvents.onLeave![name] = ComUtil.camelize_prefix('onLeave', name);
         this._lifecycleEvents.on![name]      = ComUtil.camelize_prefix('on',      name);
+    }
+
+    // 删除生命周期名 - 状态相关
+    private _delStateLifecycleNames(name: string) {
+        delete this._lifecycleEvents.onEnter![name];
+        delete this._lifecycleEvents.onLeave![name];
+        delete this._lifecycleEvents.on![name];
     }
 
     // 添加转换
@@ -133,11 +176,40 @@ export class StateMachine {
         }
     }
 
+    // 删除转换
+    private _delTransition(name: string, force: boolean = false) {
+        let canDel = true;
+        if (!force) {
+            for (let key_name in this._map) {
+                let map_from = this._map[key_name];
+                if (map_from[name]) {
+                    canDel = false;
+                    break;
+                }
+            }
+        }
+
+        if (canDel) {
+            let index = this._transitions.indexOf(name);
+            index >= 0 && this._transitions.splice(index, 1);
+            this._delTransitionLifecycleNames(name);
+            return true;
+        }
+        return false;
+    }
+
     // 添加生命周期名 - 转换相关
     private _addTransitionLifecycleNames(name: string) {
         this._lifecycleEvents.onBefore![name] = ComUtil.camelize_prefix('onBefore', name);
         this._lifecycleEvents.onAfter![name]  = ComUtil.camelize_prefix('onAfter',  name);
         this._lifecycleEvents.on![name]       = ComUtil.camelize_prefix('on',       name);
+    }
+
+    // 删除生命周期名 - 转换相关
+    private _delTransitionLifecycleNames(name: string) {
+        delete this._lifecycleEvents.onBefore![name];
+        delete this._lifecycleEvents.onAfter![name];
+        delete this._lifecycleEvents.on![name];
     }
 
     // 配置单条转换信息
@@ -149,6 +221,32 @@ export class StateMachine {
         if (typeof to !== 'function') this._addState(to!);
         this._addTransition(name);
         this._map[from][name] = transition;
+        return transition;
+    }
+
+    // 删除单条转换信息(name 及 from 均相等，则认为是待删除 transition)
+    private _mapTransition_del(transition: IFsmTransition) {
+        let name = transition.name as string,
+            from = transition.from as string;
+
+        // 如果 from == wildcard，删除所有 state 关联transition
+        // var wildcard = this.defaults.wildcard;
+        // if (from == wildcard) {
+        //   for (let key_name in this._map) {
+        //     let map_from = this._map[key_name];
+        //     if (map_from[name]) delete map_from[name];
+        //   }
+        // } else {
+        //   let map_from = this._map[from];
+        //   if (map_from) delete map_from[name];
+        // }
+
+        // 只对 from 精确匹配删除关联transition
+        let map_from = this._map[from];
+        if (map_from) delete map_from[name];
+
+        this._delTransition(name);
+        this._delState(from);
         return transition;
     }
 
@@ -180,7 +278,7 @@ export class StateMachine {
 
     // 配置多条转换信息(新的增加，重复的替换)
     public configureTransitions(transitions?: IFsmTransition[]) {
-        if (!transitions) return;
+        if (!transitions || this.isPending()) return false;
         var i, n, transition, from, to, wildcard = fsm_defaults.wildcard;
         for(n = 0 ; n < transitions.length ; n++) {
             transition = transitions[n];
@@ -190,19 +288,45 @@ export class StateMachine {
                 this._mapTransition({ name: transition.name, from: from[i], to: to });
             }
         }
+        return true;
+    }
+
+    // 删除多条转换信息(转换中该操作不会生效,name 及 from 均相等，则认为是待删除 transition)
+    public delTransitions(transitions: IFsmTransition[]) {
+        if (this.isPending()) return false;
+        var i, n, transition, from, to, wildcard = fsm_defaults.wildcard;
+        for(n = 0 ; n < transitions.length ; n++) {
+            transition = transitions[n];
+            from = Array.isArray(transition.from) ? transition.from : [transition.from || wildcard];
+            to = transition.to || wildcard;
+            for(i = 0 ; i < from.length ; i++) {
+                this._mapTransition_del({ name: transition.name, from: from[i], to: to });
+            }
+        }
+        return true;
     }
 
     // 配置事件回调监听(新的增加，重复的替换)
     public configureMethods(methods?: FsmEventCallbacks) {
-        if (!methods) return;
+        if (!methods || this.isPending()) return false;
         for (let event in methods) {
             this._eventCallbacks[event] = methods[event];
         }
+        return true;
+    }
+
+    // 删除事件回调监听(转换中该操作不会生效)
+    public delMethods(methods: string[]) {
+        if (this.isPending()) return false;
+        for (let i = 0, len = methods.length; i < len; ++i) {
+            delete this._eventCallbacks[methods[i]];
+        }
+        return true;
     }
 
     private _seek(transition: string, args?: any[]) {
         let wildcard = fsm_defaults.wildcard,
-            entry    = this.transitionFor(this.state, transition),
+            entry    = this._transitionFor(this.state, transition),
             to       = entry && entry.to;
         if (typeof to === 'function')
             if (args) {

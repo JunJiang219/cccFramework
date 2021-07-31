@@ -37,22 +37,14 @@ export class ExRes extends Component {
                 onEnterState: function() { console.log('onEnterState', arguments) },
                 onLeaveState: function() { console.log('onLeaveState', arguments) },
                 onTransition: function() { console.log('onTransition', arguments) },
-                onLeaveSolid: function() { 
-                    console.log('onXxx');
-                    return new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            resolve("onLiquid - setTimeout");
-                        }, 5000);
-                    })
-                },
-                onPendingTransition: function(transition: string, from: string, to: string) {
-                    console.log('onPendingTransition');
-                },
             }
         }, "abc");
         console.log(test.allStates());
-        test.execTransit('goto', 'xxx');
-        test.execTransit('goto', 'liquid');
+        // test.delTransitions([
+        //     { name: 'melt',     from: 'solid',  to: 'liquid' },
+        //     // { name: 'freeze',   from: 'liquid', to: 'solid'  },
+        // ]);
+        test.execTransit('melt', 'solid');
     }
 
     public abc(s: string) {
