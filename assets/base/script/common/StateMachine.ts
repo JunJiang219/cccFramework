@@ -417,7 +417,7 @@ export class StateMachine {
         if ('doTransit' == event) {
             result = this._doTransit(args[0]);
         } else {
-            if (this._eventCallbacks[event]) result = this._eventCallbacks[event](args);
+            if (this._eventCallbacks[event]) result = this._eventCallbacks[event](...args);
         }
         if (result && typeof result.then === 'function') {
             return result.then(this._observeEvents.bind(this, events, args, event))

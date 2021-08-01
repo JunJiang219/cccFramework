@@ -32,11 +32,11 @@ export class ExRes extends Component {
                 { name: 'goto',     from: '*',      to: this.abc.bind(this) }
             ],
             methods: {
-                onBeforeTransition: function() { console.log('onBeforeTransition', arguments) },
-                onAfterTransition: function() { console.log('onAfterTransition', arguments) },
-                onEnterState: function() { console.log('onEnterState', arguments) },
-                onLeaveState: function() { console.log('onLeaveState', arguments) },
-                onTransition: function() { console.log('onTransition', arguments) },
+                onBeforeTransition: function() { console.log('onBeforeTransition', arguments, arguments[0].event) },
+                onAfterTransition: function() { console.log('onAfterTransition', arguments, arguments[0].event) },
+                onEnterState: function() { console.log('onEnterState', arguments, arguments[0].event) },
+                onLeaveState: function() { console.log('onLeaveState', arguments, arguments[0].event) },
+                onTransition: function() { console.log('onTransition', arguments, arguments[0].event) },
             }
         }, "abc");
         console.log(test.allStates());
@@ -44,7 +44,8 @@ export class ExRes extends Component {
         //     { name: 'melt',     from: 'solid',  to: 'liquid' },
         //     // { name: 'freeze',   from: 'liquid', to: 'solid'  },
         // ]);
-        test.execTransit('melt', 'solid');
+        test.execTransit('goto', 'gas');
+        console.log(test.state);
     }
 
     public abc(s: string) {
