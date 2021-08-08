@@ -14,8 +14,8 @@ export class ResLoader {
     private static _instance: ResLoader | null = null;
     private constructor() {}
     public static getInstance(): ResLoader {
-        if (!this._instance) this._instance = new ResLoader();
-        return this._instance;
+        if (!ResLoader._instance) ResLoader._instance = new ResLoader();
+        return ResLoader._instance;
     }
 
     private _loadByBundleAndArgs<T extends Asset>(bundle: AssetManager.Bundle, args: ILoadResArgs<T>): void {
