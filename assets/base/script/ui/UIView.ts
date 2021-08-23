@@ -22,28 +22,8 @@ import { ResKeeper} from "../res/ResKeeper";
 
 const { ccclass, property } = _decorator;
 
-/** 界面展示类型 */
-export enum UIShowTypes {
-    UIFullScreen,       // 全屏显示，全屏界面使用该选项可获得更高性能
-    UIAddition,         // 叠加显示，性能较差
-    UISingle,           // 单界面显示，只显示当前界面和背景界面，性能较好
-};
-
 @ccclass("UIView")
 export class UIView extends ResKeeper {
-
-    /** 快速关闭 */
-    @property
-    quickClose: boolean = false;
-    /** 屏蔽点击选项 在UIConf设置屏蔽点击*/
-    // @property
-    // preventTouch: boolean = true;
-    /** 缓存选项 */
-    @property
-    cache: boolean = false;
-    /** 界面显示类型 */
-    @property({ type: Enum(UIShowTypes) })
-    showType: UIShowTypes = UIShowTypes.UISingle;
 
     /** 界面id */
     public uiId: number = 0;
@@ -55,7 +35,7 @@ export class UIView extends ResKeeper {
      * 当界面被创建时回调，生命周期内只调用
      * @param args 可变参数
      */
-    public init(...args : any): void {
+    public init(...args : any[]): void {
 
     }
 
@@ -64,7 +44,7 @@ export class UIView extends ResKeeper {
      * @param fromUI 从哪个UI打开的
      * @param args 可变参数
      */
-    public onOpen(fromUI: number, ...args : any): void {
+    public onOpen(fromUI: number, ...args : any[]): void {
 
     }
 
@@ -87,7 +67,7 @@ export class UIView extends ResKeeper {
      * @param preID 前一个ui
      * @param args 可变参数，
      */
-    public onTop(preID: number, ...args : any): void {
+    public onTop(preID: number, ...args : any[]): void {
 
     }
 }

@@ -7,7 +7,7 @@ import { instantiate } from "cc";
 import { Node } from "cc";
 import { resLoader } from "../res/ResLoader";
 import { ProgressCallback } from "../res/ResUtil";
-import { UIView, UIShowTypes } from "./UIView";
+import { UIView } from "./UIView";
 
 /**
  * UIManager界面管理类
@@ -20,24 +20,34 @@ import { UIView, UIShowTypes } from "./UIView";
  * 2018-8-28 by 宝爷
  */
 
+/** 界面展示类型 */
+export enum UIShowTypes {
+    UIFullScreen,       // 全屏显示，全屏界面使用该选项可获得更高性能
+    UIAddition,         // 叠加显示，性能较差
+    UISingle,           // 单界面显示，只显示当前界面和背景界面，性能较好
+};
+
 /** UI栈结构体 */
-export interface UIInfo {
+export interface IUIInfo {
     uiId: number;
     uiView: UIView | null;
     uiArgs: any;
     preventNode?: Node | null;
     zOrder?: number;
-    openType?: 'quiet' | 'other';
     isClose?: boolean;
     resToClear?: string[];
     resCache?: string[];
 }
 
 /** UI配置结构体 */
-export interface UIConf {
+export interface IUIConf {
     bundle?: string;
     prefab: string;
     preventTouch?: boolean;
+    quickClose?: boolean;
+    cache?: boolean;
+    showType?: UIShowTypes;
+    zOrder?: number;
 }
 
 export type UIOpenBeforeCallback = (uiId: number, preUIId: number) => void;
@@ -45,25 +55,33 @@ export type UIOpenCallback = (uiId: number, preUIId: number) => void;
 export type UICloseCallback = (uiId: number) => void;
 
 export class UIManager {
-    /** 资源加载计数器，用于生成唯一的资源占用key */
-    private useCount = 0;
+    private _sceneName: string = null!;
     /** 背景UI（有若干层UI是作为背景UI，而不受切换等影响）*/
-    private BackGroundUI = 0;
+    private _backGroundUI = 0;
     /** 是否正在关闭UI */
-    private isClosing = false;
+    private _isClosing = false;
     /** 是否正在打开UI */
-    private isOpening = false;
+    private _isOpening = false;
 
     /** UI界面缓存（key为UIId，value为UIView节点）*/
-    private UICache: { [UIId: number]: UIView } = {};
+    private _uiCache: { [UIId: number]: UIView } = {};
     /** UI界面栈（{UIID + UIView + UIArgs}数组）*/
-    private UIStack: UIInfo[] = [];
+    private _uiStack: IUIInfo[] = [];
     /** UI待打开列表 */
-    private UIOpenQueue: UIInfo[] = [];
+    private _uiOpenQueue: IUIInfo[] = [];
     /** UI待关闭列表 */
-    private UICloseQueue: UIView[] = [];
+    private _uiCloseQueue: UIView[] = [];
     /** UI配置 */
-    private UIConf: { [key: number]: UIConf } = {};
+    private _uiConf: { [key: number]: IUIConf } = {};
+
+    public constructor(sceneName?: string) {
+        if (!sceneName) sceneName = director.getScene()?.name;
+        this._sceneName = sceneName!;
+        director.getScene
+    }
+
+    // 获取UI管理类管理的场景名
+    public get sceneName() { return this._sceneName; }
 
     /** UI打开前回调 */
     public uiOpenBeforeDelegate: UIOpenBeforeCallback | null = null;
@@ -76,8 +94,8 @@ export class UIManager {
      * 初始化所有UI的配置对象
      * @param conf 配置对象
      */
-    public initUIConf(conf: { [key: number]: UIConf }): void {
-        this.UIConf = conf;
+    public initUIConf(conf: { [key: number]: IUIConf }): void {
+        this._uiConf = conf;
     }
 
     /**
@@ -85,8 +103,8 @@ export class UIManager {
      * @param uiId 要设置的界面id
      * @param conf 要设置的配置
      */
-    public setUIConf(uiId: number, conf: UIConf): void {
-        this.UIConf[uiId] = conf;
+    public setUIConf(uiId: number, conf: IUIConf): void {
+        this._uiConf[uiId] = conf;
     }
 
     /****************** 私有方法，UIManager内部的功能和基础规则 *******************/
@@ -108,20 +126,20 @@ export class UIManager {
 
         let child = director.getScene()!.getChildByName('Canvas');
         child!.addChild(node);
-        uiCom.priority = zOrder - 0.01;
+        node.setSiblingIndex(zOrder - 0.01);
        return node;
     }
 
     /** 自动执行下一个待关闭或待打开的界面 */
     private autoExecNextUI() {
         // 逻辑上是先关后开
-        if (this.UICloseQueue.length > 0) {
-            let uiQueueInfo = this.UICloseQueue[0];
-            this.UICloseQueue.splice(0, 1);
+        if (this._uiCloseQueue.length > 0) {
+            let uiQueueInfo = this._uiCloseQueue[0];
+            this._uiCloseQueue.splice(0, 1);
             this.close(uiQueueInfo);
-        } else if (this.UIOpenQueue.length > 0) {
-            let uiQueueInfo = this.UIOpenQueue[0];
-            this.UIOpenQueue.splice(0, 1);
+        } else if (this._uiOpenQueue.length > 0) {
+            let uiQueueInfo = this._uiOpenQueue[0];
+            this._uiOpenQueue.splice(0, 1);
             this.open(uiQueueInfo.uiId, uiQueueInfo.uiArgs);
         }
     }
@@ -148,26 +166,29 @@ export class UIManager {
     /** 根据界面显示类型刷新显示 */
     private updateUI() {
         let hideIndex: number = 0;
-        let showIndex: number = this.UIStack.length - 1;
+        let showIndex: number = this._uiStack.length - 1;
         for (; showIndex >= 0; --showIndex) {
-            let mode = this.UIStack[showIndex].uiView!.showType;
+            let uiInfo = this._uiStack[showIndex];
+            let uiConf = this._uiConf[uiInfo.uiId];
+            let mode = uiConf.showType;
             // 无论何种模式，最顶部的UI都是应该显示的
-            this.UIStack[showIndex].uiView!.node.active = true;
+            uiInfo.uiView!.node.active = true;
+
             if (UIShowTypes.UIFullScreen == mode) {
                 break;
             } else if (UIShowTypes.UISingle == mode) {
-                for (let i = 0; i < this.BackGroundUI; ++i) {
-                    if (this.UIStack[i]) {
-                        this.UIStack[i].uiView!.node.active = true;
+                for (let i = 0; i < this._backGroundUI; ++i) {
+                    if (this._uiStack[i]) {
+                        this._uiStack[i].uiView!.node.active = true;
                     }
                 }
-                hideIndex = this.BackGroundUI;
+                hideIndex = this._backGroundUI;
                 break;
             }
         }
         // 隐藏不应该显示的部分UI
         for (let hide: number = hideIndex; hide < showIndex; ++hide) {
-            this.UIStack[hide].uiView!.node.active = false;
+            this._uiStack[hide].uiView!.node.active = false;
         }
     }
 
@@ -180,16 +201,16 @@ export class UIManager {
      */
     private getOrCreateUI(uiId: number, processCallback: ProgressCallback | null, completeCallback: (uiView: UIView | null) => void, uiArgs: any): void {
         // 如果找到缓存对象，则直接返回
-        let uiView: UIView | null = this.UICache[uiId];
+        let uiView: UIView | null = this._uiCache[uiId];
         if (uiView) {
             completeCallback(uiView);
             return;
         }
 
         // 找到UI配置
-        let uiPath = this.UIConf[uiId].prefab;
+        let uiPath = this._uiConf[uiId].prefab;
         if (null == uiPath) {
-            log(`getOrCreateUI ${uiId} faile, prefab conf not found!`);
+            log(`getOrCreateUI ${uiId} failed, prefab conf not found!`);
             completeCallback(null);
             return;
         }
@@ -197,14 +218,14 @@ export class UIManager {
         resLoader.load(uiPath, processCallback, (err, prefab) => {
             // 检查加载资源错误
             if (err) {
-                log(`getOrCreateUI loadRes ${uiId} faile, path: ${uiPath} error: ${err}`);
+                log(`getOrCreateUI loadRes ${uiId} failed, path: ${uiPath} error: ${err}`);
                 completeCallback(null);
                 return;
             }
             // 检查实例化错误
             let uiNode: Node = instantiate(prefab);
             if (null == uiNode) {
-                log(`getOrCreateUI instantiate ${uiId} faile, path: ${uiPath}`);
+                log(`getOrCreateUI instantiate ${uiId} failed, path: ${uiPath}`);
                 completeCallback(null);
                 prefab.decRef();
                 return;
@@ -212,7 +233,7 @@ export class UIManager {
             // 检查组件获取错误
             uiView = uiNode.getComponent(UIView);
             if (null == uiView) {
-                log(`getOrCreateUI getComponent ${uiId} faile, path: ${uiPath}`);
+                log(`getOrCreateUI getComponent ${uiId} failed, path: ${uiPath}`);
                 uiNode.destroy();
                 completeCallback(null);
                 prefab.decRef();
@@ -234,7 +255,7 @@ export class UIManager {
      * @param uiInfo 界面栈对应的信息结构
      * @param uiArgs 界面初始化参数
      */
-    private onUIOpen(uiId: number, uiView: UIView, uiInfo: UIInfo, uiArgs: any) {
+    private onUIOpen(uiId: number, uiView: UIView, uiInfo: IUIInfo, uiArgs: any) {
         if (null == uiView) {
             return;
         }
@@ -245,9 +266,10 @@ export class UIManager {
         if(!uiCom) {
             uiCom = uiView.addComponent(UITransform);
         }
+        let uiConf = this._uiConf[uiInfo.uiId];
 
         // 快速关闭界面的设置，绑定界面中的background，实现快速关闭
-        if (uiView.quickClose) {
+        if (uiConf.quickClose) {
             let backGround = uiView.node.getChildByName('background');
             if (!backGround) {
                 backGround = new Node()
@@ -255,7 +277,7 @@ export class UIManager {
                 let uiCom = backGround.addComponent(UITransform);
                 uiCom.setContentSize(view.getVisibleSize());
                 uiView.node.addChild(backGround);
-                uiCom.priority = -1;
+                backGround.setSiblingIndex(-1);
             }
             backGround.targetOff(Node.EventType.TOUCH_START);
             backGround.on(Node.EventType.TOUCH_START, (event: any) => {
@@ -267,15 +289,15 @@ export class UIManager {
         // 添加到场景中
         let child = director.getScene()!.getChildByName('Canvas');
         child!.addChild(uiView.node);
-        uiCom!.priority = uiInfo.zOrder || this.UIStack.length;
+        uiView.node.setSiblingIndex(uiInfo.zOrder || this._uiStack.length);
 
         // 刷新其他UI
         this.updateUI();
 
         // 从那个界面打开的
         let fromUIID = 0;
-        if (this.UIStack.length > 1) {
-            fromUIID = this.UIStack[this.UIStack.length - 2].uiId
+        if (this._uiStack.length > 1) {
+            fromUIID = this._uiStack[this._uiStack.length - 2].uiId
         }
 
         // 打开界面之前回调
@@ -295,15 +317,15 @@ export class UIManager {
 
     /** 打开界面并添加到界面栈中 */
     public open(uiId: number, uiArgs: any = null, progressCallback: ProgressCallback | null = null): void {
-        let uiInfo: UIInfo = {
+        let uiInfo: IUIInfo = {
             uiId: uiId,
             uiArgs: uiArgs,
             uiView: null
         };
 
-        if (this.isOpening || this.isClosing) {
+        if (this._isOpening || this._isClosing) {
             // 插入待打开队列
-            this.UIOpenQueue.push(uiInfo);
+            this._uiOpenQueue.push(uiInfo);
             return;
         }
 
@@ -315,22 +337,22 @@ export class UIManager {
         }
 
         // 设置UI的zOrder
-        uiInfo.zOrder = this.UIStack.length + 1;
-        this.UIStack.push(uiInfo);
+        uiInfo.zOrder = this._uiStack.length + 1;
+        this._uiStack.push(uiInfo);
 
         // 先屏蔽点击
-        if (this.UIConf[uiId].preventTouch) {
+        if (this._uiConf[uiId].preventTouch) {
             uiInfo.preventNode = this.preventTouch(uiInfo.zOrder);
         }
 
-        this.isOpening = true;
+        this._isOpening = true;
         // 预加载资源，并在资源加载完成后自动打开界面
         this.getOrCreateUI(uiId, progressCallback, (uiView: UIView | null): void => {
             // 如果界面已经被关闭或创建失败
             if (uiInfo.isClose || null == uiView) {
                 log(`getOrCreateUI ${uiId} faile!
                         close state : ${uiInfo.isClose} , uiView : ${uiView}`);
-                this.isOpening = false;
+                this._isOpening = false;
                 if (uiInfo.preventNode) {
                     uiInfo.preventNode.destroy();
                     uiInfo.preventNode = null;
@@ -340,14 +362,14 @@ export class UIManager {
 
             // 打开UI，执行配置
             this.onUIOpen(uiId, uiView, uiInfo, uiArgs);
-            this.isOpening = false;
+            this._isOpening = false;
             this.autoExecNextUI();
         }, uiArgs);
     }
 
     /** 替换栈顶界面 */
     public replace(uiId: number, uiArgs: any = null) {
-        this.close(this.UIStack[this.UIStack.length - 1].uiView!);
+        this.close(this._uiStack[this._uiStack.length - 1].uiView!);
         this.open(uiId, uiArgs);
     }
 
@@ -356,28 +378,28 @@ export class UIManager {
      * @param closeUI 要关闭的界面
      */
     public close(closeUI?: UIView) {
-        let uiCount = this.UIStack.length;
-        if (uiCount < 1 || this.isClosing || this.isOpening) {
+        let uiCount = this._uiStack.length;
+        if (uiCount < 1 || this._isClosing || this._isOpening) {
             if (closeUI) {
                 // 插入待关闭队列
-                this.UICloseQueue.push(closeUI);
+                this._uiCloseQueue.push(closeUI);
             }
             return;
         }
 
-        let uiInfo: UIInfo | undefined;
+        let uiInfo: IUIInfo | undefined;
         if (closeUI) {
-            for (let index = this.UIStack.length - 1; index >= 0; index--) {
-                let ui = this.UIStack[index];
+            for (let index = this._uiStack.length - 1; index >= 0; index--) {
+                let ui = this._uiStack[index];
                 if (ui.uiView === closeUI) {
                     uiInfo = ui;
-                    this.UIStack.splice(index, 1);
+                    this._uiStack.splice(index, 1);
                     break;
                 }
             }
 
         } else {
-            uiInfo = this.UIStack.pop();
+            uiInfo = this._uiStack.pop();
         }
         // 找不到这个UI
         if (uiInfo === undefined) {
@@ -387,6 +409,7 @@ export class UIManager {
         // 关闭当前界面
         let uiId = uiInfo.uiId;
         let uiView = uiInfo.uiView;
+        let uiConf = this._uiConf[uiId];
         uiInfo.isClose = true;
 
         // 回收遮罩层
@@ -399,11 +422,11 @@ export class UIManager {
             return;
         }
 
-        let preUIInfo = this.UIStack[uiCount - 2];
+        let preUIInfo = this._uiStack[uiCount - 2];
         // 处理显示模式
         this.updateUI();
         let close = () => {
-            this.isClosing = false;
+            this._isClosing = false;
             // 显示之前的界面
             if (preUIInfo && preUIInfo.uiView && this.isTopUI(preUIInfo.uiId)) {
                 // 如果之前的界面弹到了最上方（中间有肯能打开了其他界面）
@@ -417,8 +440,8 @@ export class UIManager {
             if (this.uiCloseDelegate) {
                 this.uiCloseDelegate(uiId);
             }
-            if (uiView!.cache) {
-                this.UICache[uiId] = uiView!;
+            if (uiConf.cache) {
+                this._uiCache[uiId] = uiView!;
                 uiView!.node.removeFromParent();
                 log(`uiView removeFromParent ${uiInfo!.uiId}`);
             } else {
@@ -435,7 +458,7 @@ export class UIManager {
     /** 关闭所有界面 */
     public closeAll() {
         // 不播放动画，也不清理缓存
-        for (const uiInfo of this.UIStack) {
+        for (const uiInfo of this._uiStack) {
             uiInfo.isClose = true;
             if (uiInfo.preventNode) {
                 uiInfo.preventNode.destroy();
@@ -447,11 +470,11 @@ export class UIManager {
                 uiInfo.uiView.node.destroy();
             }
         }
-        this.UIOpenQueue = [];
-        this.UICloseQueue = [];
-        this.UIStack = [];
-        this.isOpening = false;
-        this.isClosing = false;
+        this._uiOpenQueue = [];
+        this._uiCloseQueue = [];
+        this._uiStack = [];
+        this._isOpening = false;
+        this._isClosing = false;
     }
 
     /**
@@ -467,14 +490,15 @@ export class UIManager {
         }
 
         idx = bOpenSelf ? idx : idx + 1;
-        for (let i = this.UIStack.length - 1; i >= idx; --i) {
-            let uiInfo = this.UIStack.pop();
+        for (let i = this._uiStack.length - 1; i >= idx; --i) {
+            let uiInfo = this._uiStack.pop();
             if (!uiInfo) {
                 continue;
             }
 
             let uiId = uiInfo.uiId;
             let uiView = uiInfo.uiView;
+            let uiConf = this._uiConf[uiId];
             uiInfo.isClose = true
 
             // 回收屏蔽层
@@ -489,8 +513,8 @@ export class UIManager {
 
             if (uiView) {
                 uiView.onClose()
-                if (uiView.cache) {
-                    this.UICache[uiId] = uiView;
+                if (uiConf.cache) {
+                    this._uiCache[uiId] = uiView;
                     uiView.node.removeFromParent();
                 } else {
                     uiView.releaseAssets();
@@ -500,15 +524,15 @@ export class UIManager {
         }
 
         this.updateUI();
-        this.UIOpenQueue = [];
-        this.UICloseQueue = [];
+        this._uiOpenQueue = [];
+        this._uiCloseQueue = [];
         bOpenSelf && this.open(uiId, uiArgs);
     }
 
     /** 清理界面缓存 */
     public clearCache(): void {
-        for (const key in this.UICache) {
-            let ui = this.UICache[key];
+        for (const key in this._uiCache) {
+            let ui = this._uiCache[key];
             if (isValid(ui.node)) {
                 if (isValid(ui)) {
                     ui.releaseAssets();
@@ -516,20 +540,20 @@ export class UIManager {
                 ui.node.destroy();
             }
         }
-        this.UICache = {};
+        this._uiCache = {};
     }
 
     /******************** UI的便捷接口 *******************/
     public isTopUI(uiId: number): boolean {
-        if (this.UIStack.length == 0) {
+        if (this._uiStack.length == 0) {
             return false;
         }
-        return this.UIStack[this.UIStack.length - 1].uiId == uiId;
+        return this._uiStack[this._uiStack.length - 1].uiId == uiId;
     }
 
     public getUI(uiId: number): UIView | null {
-        for (let index = 0; index < this.UIStack.length; index++) {
-            const element = this.UIStack[index];
+        for (let index = 0; index < this._uiStack.length; index++) {
+            const element = this._uiStack[index];
             if (uiId == element.uiId) {
                 return element.uiView;
             }
@@ -538,15 +562,15 @@ export class UIManager {
     }
 
     public getTopUI(): UIView | null{
-        if (this.UIStack.length > 0) {
-            return this.UIStack[this.UIStack.length - 1].uiView;
+        if (this._uiStack.length > 0) {
+            return this._uiStack[this._uiStack.length - 1].uiView;
         }
         return null;
     }
 
     public getUIIndex(uiId: number): number {
-        for (let index = 0; index < this.UIStack.length; index++) {
-            const element = this.UIStack[index];
+        for (let index = 0; index < this._uiStack.length; index++) {
+            const element = this._uiStack[index];
             if (uiId == element.uiId) {
                 return index;
             }
@@ -554,5 +578,3 @@ export class UIManager {
         return -1;
     }
 }
-
-export let uiMgr: UIManager = new UIManager();
