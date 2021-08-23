@@ -31,7 +31,7 @@ export enum UIShowTypes {
 export interface IUIInfo {
     uiId: number;
     uiView: UIView | null;
-    uiArgs: any;
+    uiArgs: any[];
     preventNode?: Node | null;
     zOrder?: number;
     isClose?: boolean;
