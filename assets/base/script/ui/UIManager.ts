@@ -113,7 +113,7 @@ export class UIManager {
      * 添加防触摸层
      * @param zOrder 屏蔽层的层级
      */
-    private preventTouch(zOrder: number) {
+    private _preventTouch(zOrder: number) {
         let node = new Node()
         node.name = 'preventTouch';
 
@@ -131,7 +131,7 @@ export class UIManager {
     }
 
     /** 自动执行下一个待关闭或待打开的界面 */
-    private autoExecNextUI() {
+    private _autoExecNextUI() {
         // 逻辑上是先关后开
         if (this._uiCloseQueue.length > 0) {
             let uiQueueInfo = this._uiCloseQueue[0];
@@ -140,7 +140,7 @@ export class UIManager {
         } else if (this._uiOpenQueue.length > 0) {
             let uiQueueInfo = this._uiOpenQueue[0];
             this._uiOpenQueue.splice(0, 1);
-            this.open(uiQueueInfo.uiId, uiQueueInfo.uiArgs);
+            this.open(uiQueueInfo.uiId, ...uiQueueInfo.uiArgs);
         }
     }
 
@@ -149,7 +149,7 @@ export class UIManager {
      * @param aniName 动画名
      * @param aniOverCallback 动画播放完成回调
      */
-    private autoExecAnimation(uiView: UIView, aniName: string, aniOverCallback: () => void) {
+    private _autoExecAnimation(uiView: UIView, aniName: string, aniOverCallback: () => void) {
         // 暂时先省略动画播放的逻辑
         aniOverCallback();
     }
@@ -158,13 +158,13 @@ export class UIManager {
      * 自动检测资源预加载组件，如果存在则加载完成后调用completeCallback，否则直接调用
      * @param completeCallback 资源加载完成回调
      */
-    private autoLoadRes(uiView: UIView, completeCallback: () => void) {
+    private _autoLoadRes(uiView: UIView, completeCallback: () => void) {
         // 暂时先省略
         completeCallback();
     }
 
     /** 根据界面显示类型刷新显示 */
-    private updateUI() {
+    private _updateUI() {
         let hideIndex: number = 0;
         let showIndex: number = this._uiStack.length - 1;
         for (; showIndex >= 0; --showIndex) {
@@ -195,11 +195,11 @@ export class UIManager {
     /**
      * 异步加载一个UI的prefab，成功加载了一个prefab之后
      * @param uiId 界面id
-     * @param processCallback 加载进度回调
+     * @param progressCallback 加载进度回调
      * @param completeCallback 加载完成回调
      * @param uiArgs 初始化参数
      */
-    private getOrCreateUI(uiId: number, processCallback: ProgressCallback | null, completeCallback: (uiView: UIView | null) => void, uiArgs: any): void {
+    private _getOrCreateUI(uiId: number, progressCallback: ProgressCallback | null, completeCallback: (uiView: UIView | null) => void, ...uiArgs: any[]): void {
         // 如果找到缓存对象，则直接返回
         let uiView: UIView | null = this._uiCache[uiId];
         if (uiView) {
@@ -215,7 +215,7 @@ export class UIManager {
             return;
         }
 
-        resLoader.load(uiPath, processCallback, (err, prefab) => {
+        resLoader.load(uiPath, progressCallback, (err, prefab) => {
             // 检查加载资源错误
             if (err) {
                 log(`getOrCreateUI loadRes ${uiId} failed, path: ${uiPath} error: ${err}`);
@@ -240,8 +240,8 @@ export class UIManager {
                 return;
             }
             // 异步加载UI预加载的资源
-            this.autoLoadRes(uiView, () => {
-                uiView!.init(uiArgs);
+            this._autoLoadRes(uiView, () => {
+                uiView!.init(...uiArgs);
                 completeCallback(uiView);
                 uiView!.cacheAsset(prefab);
             })
@@ -255,7 +255,7 @@ export class UIManager {
      * @param uiInfo 界面栈对应的信息结构
      * @param uiArgs 界面初始化参数
      */
-    private onUIOpen(uiId: number, uiView: UIView, uiInfo: IUIInfo, uiArgs: any) {
+    private _onUIOpen(uiId: number, uiView: UIView, uiInfo: IUIInfo, ...uiArgs: any[]) {
         if (null == uiView) {
             return;
         }
@@ -292,7 +292,7 @@ export class UIManager {
         uiView.node.setSiblingIndex(uiInfo.zOrder || this._uiStack.length);
 
         // 刷新其他UI
-        this.updateUI();
+        this._updateUI();
 
         // 从那个界面打开的
         let fromUIID = 0;
@@ -306,8 +306,8 @@ export class UIManager {
         }
 
         // 执行onOpen回调
-        uiView.onOpen(fromUIID, uiArgs);
-        this.autoExecAnimation(uiView, "uiOpen", () => {
+        uiView.onOpen(fromUIID, ...uiArgs);
+        this._autoExecAnimation(uiView, "uiOpen", () => {
             uiView.onOpenAniOver();
             if (this.uiOpenDelegate) {
                 this.uiOpenDelegate(uiId, fromUIID);
@@ -316,7 +316,7 @@ export class UIManager {
     }
 
     /** 打开界面并添加到界面栈中 */
-    public open(uiId: number, uiArgs: any = null, progressCallback: ProgressCallback | null = null): void {
+    public open(uiId: number, progressCallback: ProgressCallback | null = null, ...uiArgs: any[]): void {
         let uiInfo: IUIInfo = {
             uiId: uiId,
             uiArgs: uiArgs,
@@ -332,7 +332,7 @@ export class UIManager {
         let uiIndex = this.getUIIndex(uiId);
         if (-1 != uiIndex) {
             // 重复打开了同一个界面，直接回到该界面
-            this.closeToUI(uiId, uiArgs);
+            this.closeToUI(uiId, ...uiArgs);
             return;
         }
 
@@ -342,15 +342,15 @@ export class UIManager {
 
         // 先屏蔽点击
         if (this._uiConf[uiId].preventTouch) {
-            uiInfo.preventNode = this.preventTouch(uiInfo.zOrder);
+            uiInfo.preventNode = this._preventTouch(uiInfo.zOrder);
         }
 
         this._isOpening = true;
         // 预加载资源，并在资源加载完成后自动打开界面
-        this.getOrCreateUI(uiId, progressCallback, (uiView: UIView | null): void => {
+        this._getOrCreateUI(uiId, progressCallback, (uiView: UIView | null): void => {
             // 如果界面已经被关闭或创建失败
             if (uiInfo.isClose || null == uiView) {
-                log(`getOrCreateUI ${uiId} faile!
+                log(`getOrCreateUI ${uiId} failed!
                         close state : ${uiInfo.isClose} , uiView : ${uiView}`);
                 this._isOpening = false;
                 if (uiInfo.preventNode) {
@@ -361,16 +361,16 @@ export class UIManager {
             }
 
             // 打开UI，执行配置
-            this.onUIOpen(uiId, uiView, uiInfo, uiArgs);
+            this._onUIOpen(uiId, uiView, uiInfo, ...uiArgs);
             this._isOpening = false;
-            this.autoExecNextUI();
-        }, uiArgs);
+            this._autoExecNextUI();
+        }, ...uiArgs);
     }
 
     /** 替换栈顶界面 */
-    public replace(uiId: number, uiArgs: any = null) {
+    public replace(uiId: number, ...uiArgs: any[]) {
         this.close(this._uiStack[this._uiStack.length - 1].uiView!);
-        this.open(uiId, uiArgs);
+        this.open(uiId, null, ...uiArgs);
     }
 
     /**
@@ -424,7 +424,7 @@ export class UIManager {
 
         let preUIInfo = this._uiStack[uiCount - 2];
         // 处理显示模式
-        this.updateUI();
+        this._updateUI();
         let close = () => {
             this._isClosing = false;
             // 显示之前的界面
@@ -449,10 +449,10 @@ export class UIManager {
                 uiView!.node.destroy();
                 log(`uiView destroy ${uiInfo!.uiId}`);
             }
-            this.autoExecNextUI();
+            this._autoExecNextUI();
         }
         // 执行关闭动画
-        this.autoExecAnimation(uiView, "uiClose", close);
+        this._autoExecAnimation(uiView, "uiClose", close);
     }
 
     /** 关闭所有界面 */
@@ -481,15 +481,14 @@ export class UIManager {
      * 关闭界面，一直关闭到顶部为uiId的界面，为避免循环打开UI导致UI栈溢出
      * @param uiId 要关闭到的uiId（关闭其顶部的ui）
      * @param uiArgs 打开的参数
-     * @param bOpenSelf 
+     * 
      */
-    public closeToUI(uiId: number, uiArgs: any, bOpenSelf = true): void {
+    public closeToUI(uiId: number, ...uiArgs: any[]): void {
         let idx = this.getUIIndex(uiId);
         if (-1 == idx) {
             return;
         }
 
-        idx = bOpenSelf ? idx : idx + 1;
         for (let i = this._uiStack.length - 1; i >= idx; --i) {
             let uiInfo = this._uiStack.pop();
             if (!uiInfo) {
@@ -523,10 +522,10 @@ export class UIManager {
             }
         }
 
-        this.updateUI();
+        this._updateUI();
         this._uiOpenQueue = [];
         this._uiCloseQueue = [];
-        bOpenSelf && this.open(uiId, uiArgs);
+        this.open(uiId, null, ...uiArgs);
     }
 
     /** 清理界面缓存 */
