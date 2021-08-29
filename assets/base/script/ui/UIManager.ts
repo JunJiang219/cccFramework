@@ -1,10 +1,11 @@
-import { director } from "cc";
+import { Color, director, Sprite, SpriteFrame, __private } from "cc";
 import { log } from "cc";
 import { isValid } from "cc";
 import { view } from "cc";
 import { UITransform } from "cc";
 import { instantiate } from "cc";
 import { Node } from "cc";
+import { ResDefault, ResDefaultID } from "../res/ResDefault";
 import { resLoader } from "../res/ResLoader";
 import { ProgressCallback } from "../res/ResUtil";
 import { UIView } from "./UIView";
@@ -44,6 +45,7 @@ export interface IUIConf {
     bundle?: string;
     prefab: string;
     preventTouch?: boolean;
+    preventColor?: Color | null;
     quickClose?: boolean;
     cache?: boolean;
     showType?: UIShowTypes;
@@ -113,12 +115,21 @@ export class UIManager {
      * 添加防触摸层
      * @param zOrder 屏蔽层的层级
      */
-    private _preventTouch(zOrder: number) {
+    private _preventTouch(zOrder: number, color?: Color) {
         let node = new Node()
         node.name = 'preventTouch';
 
         let uiCom = node.addComponent(UITransform);
         uiCom.setContentSize(view.getVisibleSize());
+        if (color) {
+            let sprComp = node.addComponent(Sprite);
+            sprComp.type = __private.cocos_2d_components_sprite_SpriteType.SIMPLE;
+            sprComp.sizeMode = __private.cocos_2d_components_sprite_SizeMode.CUSTOM;
+            sprComp.color = color;
+            ResDefault.getInstance().getRes(ResDefaultID.PureWhiteSPF, (asset) => {
+                if (asset) sprComp.spriteFrame = asset as SpriteFrame;
+            });
+        }
 
         node.on(Node.EventType.TOUCH_START, function (event: any) {
             event.propagationStopped = true;
@@ -342,7 +353,7 @@ export class UIManager {
 
         // 先屏蔽点击
         if (this._uiConf[uiId].preventTouch) {
-            uiInfo.preventNode = this._preventTouch(uiInfo.zOrder);
+            uiInfo.preventNode = this._preventTouch(uiInfo.zOrder, this._uiConf[uiId].preventColor!);
         }
 
         this._isOpening = true;

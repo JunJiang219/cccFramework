@@ -6,7 +6,7 @@
  * 2021-1-24 by 宝爷
  */
 
-import { Asset, resources, assetManager, AssetManager, isValid, CCLoader, SpriteFrame } from "cc";
+import { Asset, resources, assetManager, AssetManager, isValid } from "cc";
 import { ResLeakChecker } from "./ResLeakChecker";
 import { AssetType, CompleteCallback, ILoadResArgs, IRemoteOptions, ProgressCallback, ResUtil } from "./ResUtil";
 
