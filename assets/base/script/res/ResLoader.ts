@@ -6,7 +6,7 @@
  * 2021-1-24 by 宝爷
  */
 
-import { Asset, resources, assetManager, AssetManager, isValid } from "cc";
+import { Asset, resources, assetManager, AssetManager, isValid, CCLoader, SpriteFrame } from "cc";
 import { ResLeakChecker } from "./ResLeakChecker";
 import { AssetType, CompleteCallback, ILoadResArgs, IRemoteOptions, ProgressCallback, ResUtil } from "./ResUtil";
 
@@ -21,15 +21,39 @@ export class ResLoader {
     private _loadByBundleAndArgs<T extends Asset>(bundle: AssetManager.Bundle, args: ILoadResArgs<T>): void {
         let finishCb: CompleteCallback<T> | CompleteCallback<T[]> | null = (err, assets) => {
             if (!err) {
-                let isValid_keeper = isValid(args.keeper);
                 if (assets instanceof Array) {
+                    // 加载一组资源
                     for (let i = 0, len = assets.length; i < len; ++i) {
                         ResLeakChecker.getInstance().traceAsset(assets[i]);
-                        isValid_keeper && args.keeper?.cacheAsset(assets[i]);
+                    }
+
+                    if (args.keeper) {
+                        // 通过 keeper 对象接口加载
+                        if (isValid(args.keeper)) {
+                            // keeper 对象有效
+                            for (let i = 0, len = assets.length; i < len; ++i) {
+                                args.keeper.cacheAsset(assets[i]);
+                            }
+                        } else {
+                            // keeper 对象失效
+                            for (let i = 0, len = assets.length; i < len; ++i) {
+                                assets[i].addRef();     // 为加载资源添加引用
+                                assets[i].decRef();     // 销毁上面添加的引用（添加再销毁是为了不影响别处引用）
+                            }
+                        }
                     }
                 } else {
+                    // 加载单个资源
                     ResLeakChecker.getInstance().traceAsset(assets);
-                    isValid_keeper && args.keeper?.cacheAsset(assets);
+
+                    if (args.keeper) {
+                        if (isValid(args.keeper)) {
+                            args.keeper.cacheAsset(assets);
+                        } else {
+                            assets.addRef();
+                            assets.decRef();
+                        }
+                    }
                 }
             }
             if (args.onComplete) args.onComplete(err, assets);

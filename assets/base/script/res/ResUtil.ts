@@ -127,7 +127,7 @@ export class ResUtil {
             keeper.cacheAsset(srcAsset);
             return srcAsset;
         } else {
-            console.error(`assignWith ${srcAsset} to ${targetNode} faile`);
+            console.error(`assignWith ${srcAsset} to ${targetNode} failed`);
             return null;
         }
     }
