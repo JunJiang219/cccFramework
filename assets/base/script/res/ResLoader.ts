@@ -37,8 +37,8 @@ export class ResLoader {
                         } else {
                             // keeper 对象失效
                             for (let i = 0, len = assets.length; i < len; ++i) {
-                                assets[i].addRef();     // 为加载资源添加引用
-                                assets[i].decRef();     // 销毁上面添加的引用（添加再销毁是为了不影响别处引用）
+                                assets[i].addRef();
+                                assets[i].decRef();     // 这里引用需要先加后减，防止意外释放外部模块的引用
                             }
                         }
                     }
@@ -51,7 +51,7 @@ export class ResLoader {
                             args.keeper.cacheAsset(assets);
                         } else {
                             assets.addRef();
-                            assets.decRef();
+                            assets.decRef();     // 这里引用需要先加后减，防止意外释放外部模块的引用
                         }
                     }
                 }

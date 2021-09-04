@@ -1,5 +1,5 @@
 /**
- * 默认资源
+ * 框架默认资源
  */
 
 import { Asset, SpriteFrame } from 'cc';
@@ -79,3 +79,5 @@ export class ResDefault {
         }
     }
 }
+
+export let resDefault = ResDefault.getInstance();

@@ -1,4 +1,4 @@
-import { Color, director, Sprite, SpriteFrame, __private } from "cc";
+import { color, Color, director, Sprite, SpriteFrame, __private } from "cc";
 import { log } from "cc";
 import { isValid } from "cc";
 import { view } from "cc";
@@ -8,7 +8,7 @@ import { Node } from "cc";
 import { ResDefault, ResDefaultID } from "../res/ResDefault";
 import { resLoader } from "../res/ResLoader";
 import { ProgressCallback } from "../res/ResUtil";
-import { UIView } from "./UIView";
+import { UIShowTypes, UIView } from "./UIView";
 
 /**
  * UIManager界面管理类
@@ -21,35 +21,23 @@ import { UIView } from "./UIView";
  * 2018-8-28 by 宝爷
  */
 
-/** 界面展示类型 */
-export enum UIShowTypes {
-    UIFullScreen,       // 全屏显示，全屏界面使用该选项可获得更高性能
-    UIAddition,         // 叠加显示，性能较差
-    UISingle,           // 单界面显示，只显示当前界面和背景界面，性能较好
-};
-
 /** UI栈结构体 */
 export interface IUIInfo {
-    uiId: number;
-    uiView: UIView | null;
-    uiArgs: any[];
-    preventNode?: Node | null;
-    zOrder?: number;
-    isClose?: boolean;
-    resToClear?: string[];
-    resCache?: string[];
+    uiId: number;                   // uiId
+    uiView: UIView | null;          // ui对象
+    uiArgs: any;                    // ui初始化参数
+    preventNode?: Node | null;      // ui触摸拦截节点
+    zOrder?: number;                // ui的层级
+    isClose?: boolean;              // ui当前是否关闭
 }
 
 /** UI配置结构体 */
 export interface IUIConf {
-    bundle?: string;
-    prefab: string;
-    preventTouch?: boolean;
-    preventColor?: Color | null;
-    quickClose?: boolean;
-    cache?: boolean;
-    showType?: UIShowTypes;
-    zOrder?: number;
+    bundle?: string;                // bundle名
+    prefab: string;                 // 预制体路径
+    preventTouch?: boolean;         // 是否开启触摸拦截，默认开启
+    preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 180)，最后一位表示透明度。null表示不设颜色
+    zOrder?: number;                // 层级
 }
 
 export type UIOpenBeforeCallback = (uiId: number, preUIId: number) => void;
@@ -179,11 +167,9 @@ export class UIManager {
         let hideIndex: number = 0;
         let showIndex: number = this._uiStack.length - 1;
         for (; showIndex >= 0; --showIndex) {
-            let uiInfo = this._uiStack[showIndex];
-            let uiConf = this._uiConf[uiInfo.uiId];
-            let mode = uiConf.showType;
+            let mode = this._uiStack[showIndex].uiView!.showType;
             // 无论何种模式，最顶部的UI都是应该显示的
-            uiInfo.uiView!.node.active = true;
+            this._uiStack[showIndex].uiView!.node.active = true;
 
             if (UIShowTypes.UIFullScreen == mode) {
                 break;
@@ -210,7 +196,7 @@ export class UIManager {
      * @param completeCallback 加载完成回调
      * @param uiArgs 初始化参数
      */
-    private _getOrCreateUI(uiId: number, progressCallback: ProgressCallback | null, completeCallback: (uiView: UIView | null) => void, ...uiArgs: any[]): void {
+    private _getOrCreateUI(uiId: number, progressCallback: ProgressCallback | null, completeCallback: (uiView: UIView | null) => void, ...uiArgs: any): void {
         // 如果找到缓存对象，则直接返回
         let uiView: UIView | null = this._uiCache[uiId];
         if (uiView) {
@@ -238,7 +224,8 @@ export class UIManager {
             if (null == uiNode) {
                 log(`getOrCreateUI instantiate ${uiId} failed, path: ${uiPath}`);
                 completeCallback(null);
-                prefab.decRef();
+                prefab.addRef();
+                prefab.decRef();    // 这里引用需要先加后减，防止意外释放外部模块的引用
                 return;
             }
             // 检查组件获取错误
@@ -247,7 +234,8 @@ export class UIManager {
                 log(`getOrCreateUI getComponent ${uiId} failed, path: ${uiPath}`);
                 uiNode.destroy();
                 completeCallback(null);
-                prefab.decRef();
+                prefab.addRef();
+                prefab.decRef();    // 这里引用需要先加后减，防止意外释放外部模块的引用
                 return;
             }
             // 异步加载UI预加载的资源
@@ -266,7 +254,7 @@ export class UIManager {
      * @param uiInfo 界面栈对应的信息结构
      * @param uiArgs 界面初始化参数
      */
-    private _onUIOpen(uiId: number, uiView: UIView, uiInfo: IUIInfo, ...uiArgs: any[]) {
+    private _onUIOpen(uiId: number, uiView: UIView, uiInfo: IUIInfo, ...uiArgs: any) {
         if (null == uiView) {
             return;
         }
@@ -277,10 +265,9 @@ export class UIManager {
         if(!uiCom) {
             uiCom = uiView.addComponent(UITransform);
         }
-        let uiConf = this._uiConf[uiInfo.uiId];
 
         // 快速关闭界面的设置，绑定界面中的background，实现快速关闭
-        if (uiConf.quickClose) {
+        if (uiView.quickClose) {
             let backGround = uiView.node.getChildByName('background');
             if (!backGround) {
                 backGround = new Node()
@@ -327,7 +314,7 @@ export class UIManager {
     }
 
     /** 打开界面并添加到界面栈中 */
-    public open(uiId: number, progressCallback: ProgressCallback | null = null, ...uiArgs: any[]): void {
+    public open(uiId: number, progressCallback: ProgressCallback | null = null, ...uiArgs: any): void {
         let uiInfo: IUIInfo = {
             uiId: uiId,
             uiArgs: uiArgs,
@@ -379,7 +366,7 @@ export class UIManager {
     }
 
     /** 替换栈顶界面 */
-    public replace(uiId: number, ...uiArgs: any[]) {
+    public replace(uiId: number, ...uiArgs: any) {
         this.close(this._uiStack[this._uiStack.length - 1].uiView!);
         this.open(uiId, null, ...uiArgs);
     }
@@ -420,7 +407,6 @@ export class UIManager {
         // 关闭当前界面
         let uiId = uiInfo.uiId;
         let uiView = uiInfo.uiView;
-        let uiConf = this._uiConf[uiId];
         uiInfo.isClose = true;
 
         // 回收遮罩层
@@ -451,7 +437,7 @@ export class UIManager {
             if (this.uiCloseDelegate) {
                 this.uiCloseDelegate(uiId);
             }
-            if (uiConf.cache) {
+            if (uiView!.cache) {
                 this._uiCache[uiId] = uiView!;
                 uiView!.node.removeFromParent();
                 log(`uiView removeFromParent ${uiInfo!.uiId}`);
@@ -494,7 +480,7 @@ export class UIManager {
      * @param uiArgs 打开的参数
      * 
      */
-    public closeToUI(uiId: number, ...uiArgs: any[]): void {
+    public closeToUI(uiId: number, ...uiArgs: any): void {
         let idx = this.getUIIndex(uiId);
         if (-1 == idx) {
             return;
@@ -508,7 +494,6 @@ export class UIManager {
 
             let uiId = uiInfo.uiId;
             let uiView = uiInfo.uiView;
-            let uiConf = this._uiConf[uiId];
             uiInfo.isClose = true
 
             // 回收屏蔽层
@@ -523,7 +508,7 @@ export class UIManager {
 
             if (uiView) {
                 uiView.onClose()
-                if (uiConf.cache) {
+                if (uiView.cache) {
                     this._uiCache[uiId] = uiView;
                     uiView.node.removeFromParent();
                 } else {
