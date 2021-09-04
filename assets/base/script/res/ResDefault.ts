@@ -8,7 +8,7 @@ import { resLoader } from './ResLoader';
 const { ccclass, property } = _decorator;
 
 // 默认资源id
-export enum ResDefaultID {
+export enum DefaultResID {
     PureWhiteSPF = 0,    // 纯白spriteFrame
 }
 
@@ -21,7 +21,7 @@ interface IResDefConf {
 
 // 默认资源配置
 const ResDefaultConf: {[resId: number]: IResDefConf}  = {
-    [ResDefaultID.PureWhiteSPF]: { res: 'texture/pureWhite', type: SpriteFrame, bundle: 'base' },
+    [DefaultResID.PureWhiteSPF]: { res: 'texture/pureWhite', type: SpriteFrame, bundle: 'base' },
 }
 
 @ccclass('ResDefault')
@@ -64,7 +64,7 @@ export class ResDefault {
             if (cf) {
                 resLoader.load(cf.res, cf.type!, (err, asset) => {
                     if (err) {
-                        cb(undefined);
+                        cb(null);
                         return;
                     }
                     this._cacheAsset(resId, asset);
@@ -72,7 +72,7 @@ export class ResDefault {
                 }, cf.bundle);
             } else {
                 console.error(`ResDefault.getRes(): not configured, resId = ${resId}`);
-                cb(undefined);
+                cb(null);
             }
         } else {
             cb(this._resCache.get(resId));

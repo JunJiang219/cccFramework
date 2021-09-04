@@ -5,7 +5,7 @@ import { view } from "cc";
 import { UITransform } from "cc";
 import { instantiate } from "cc";
 import { Node } from "cc";
-import { ResDefault, ResDefaultID } from "../res/ResDefault";
+import { ResDefault, DefaultResID } from "../res/ResDefault";
 import { resLoader } from "../res/ResLoader";
 import { ProgressCallback } from "../res/ResUtil";
 import { UIShowTypes, UIView } from "./UIView";
@@ -114,7 +114,7 @@ export class UIManager {
             sprComp.type = __private.cocos_2d_components_sprite_SpriteType.SIMPLE;
             sprComp.sizeMode = __private.cocos_2d_components_sprite_SizeMode.CUSTOM;
             sprComp.color = color;
-            ResDefault.getInstance().getRes(ResDefaultID.PureWhiteSPF, (asset) => {
+            ResDefault.getInstance().getRes(DefaultResID.PureWhiteSPF, (asset) => {
                 if (asset) sprComp.spriteFrame = asset as SpriteFrame;
             });
         }

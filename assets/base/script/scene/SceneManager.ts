@@ -31,3 +31,5 @@ export class SceneManager {
         return this.getSceneData(sceneName)?.uiMgr;
     }
 }
+
+export let sceneMgr = SceneManager.getInstance();
