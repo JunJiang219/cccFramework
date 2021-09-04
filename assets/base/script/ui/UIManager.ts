@@ -1,4 +1,4 @@
-import { color, Color, director, Sprite, SpriteFrame, __private } from "cc";
+import { color, Color, director, Sprite, SpriteFrame, UIOpacity, __private } from "cc";
 import { log } from "cc";
 import { isValid } from "cc";
 import { view } from "cc";
@@ -36,7 +36,7 @@ export interface IUIConf {
     bundle?: string;                // bundle名
     prefab: string;                 // 预制体路径
     preventTouch?: boolean;         // 是否开启触摸拦截，默认开启
-    preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 180)，最后一位表示透明度。null表示不设颜色
+    preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 150)，最后一位表示透明度。null表示不设颜色
     zOrder?: number;                // 层级
 }
 
@@ -109,11 +109,13 @@ export class UIManager {
 
         let uiCom = node.addComponent(UITransform);
         uiCom.setContentSize(view.getVisibleSize());
+        if (undefined === color) color = new Color(0, 0, 0, 150);   // 取默认值
         if (color) {
             let sprComp = node.addComponent(Sprite);
             sprComp.type = __private.cocos_2d_components_sprite_SpriteType.SIMPLE;
             sprComp.sizeMode = __private.cocos_2d_components_sprite_SizeMode.CUSTOM;
-            sprComp.color = color;
+            sprComp.color = color;  // 设置颜色及透明度
+
             ResDefault.getInstance().getRes(DefaultResID.PureWhiteSPF, (asset) => {
                 if (asset) sprComp.spriteFrame = asset as SpriteFrame;
             });
