@@ -11,7 +11,7 @@ import { ProgressCallback } from "../res/ResUtil";
 import { UIShowTypes, UIView } from "./UIView";
 
 /**
- * UIManager界面管理类
+ * UIManager界面管理类(请勿直接使用，建议通过 SceneManager 获取)
  * 
  * 1.打开界面，根据配置自动加载界面、调用初始化、播放打开动画、隐藏其他界面、屏蔽下方界面点击
  * 2.关闭界面，根据配置自动关闭界面、播放关闭动画、恢复其他界面

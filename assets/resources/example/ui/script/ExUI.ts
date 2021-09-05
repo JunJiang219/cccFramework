@@ -1,6 +1,5 @@
 
-import { _decorator, Component, assetManager, Prefab, instantiate, find } from 'cc';
-import { resLoader } from '../../../../base/script/res/ResLoader';
+import { _decorator, Component, assetManager, director } from 'cc';
 import { sceneMgr } from '../../../../base/script/scene/SceneManager';
 import { IUIConf } from '../../../../base/script/ui/UIManager';
 const { ccclass, property } = _decorator;
@@ -23,10 +22,19 @@ export class ExUI extends Component {
             if (err) return;
 
             let uiMgr = sceneMgr.getUIManager();
-            uiMgr?.initUIConf(UIConf);
-            uiMgr?.open(UIID.Bag, null, 5);
-
-            uiMgr?.open(UIID.Head, null, 1, 2, 3, 4);
+            if (uiMgr) {
+                uiMgr.initUIConf(UIConf);
+                uiMgr.open(UIID.Bag, null, 5);
+                uiMgr.open(UIID.Head, null, 1, 2, 3, 4);
+            }
         });
+    }
+
+    public onBtnChangeScene() {
+        director.loadScene('ex_cut');
+    }
+
+    onDestroy() {
+        console.log('ExUI.onDestroy()');
     }
 }
