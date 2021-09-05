@@ -9,7 +9,7 @@ const { ccclass, property } = _decorator;
 
 // 默认资源id
 export enum DefaultResID {
-    PureWhiteSPF = 0,    // 纯白spriteFrame
+    PureWhiteSF = 0,    // 纯白spriteFrame
 }
 
 // 默认资源配置结构体
@@ -20,14 +20,14 @@ interface IResDefConf {
 }
 
 // 默认资源配置
-const ResDefaultConf: {[resId: number]: IResDefConf}  = {
-    [DefaultResID.PureWhiteSPF]: { res: 'texture/pureWhite', type: SpriteFrame, bundle: 'base' },
+const ResDefaultConf: { [resId: number]: IResDefConf } = {
+    [DefaultResID.PureWhiteSF]: { res: 'texture/pureWhite/spriteFrame', type: SpriteFrame, bundle: 'base' },
 }
 
 @ccclass('ResDefault')
 export class ResDefault {
     private static _instance: ResDefault | null = null;
-    private constructor() {}
+    private constructor() { }
     public static getInstance(): ResDefault {
         if (!ResDefault._instance) ResDefault._instance = new ResDefault();
         return ResDefault._instance;
@@ -48,7 +48,7 @@ export class ResDefault {
     }
 
     /**
-     * 释放资源，组件销毁时自动调用
+     * 释放资源
      */
     public releaseAssets() {
         this._resCache.forEach((asset, resId) => {
@@ -80,4 +80,4 @@ export class ResDefault {
     }
 }
 
-export let resDefault = ResDefault.getInstance();
+export let resDft = ResDefault.getInstance();

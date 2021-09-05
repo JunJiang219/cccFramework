@@ -6,12 +6,12 @@
 import { instantiate, Node, Asset, Prefab, __private, Constructor, js } from "cc";
 import { ResKeeper } from "./ResKeeper";
 
- export type ProgressCallback = __private.cocos_core_asset_manager_shared_ProgressCallback;
- export type CompleteCallback<T = any> = __private.cocos_core_asset_manager_shared_CompleteCallbackWithData;
- export type IRemoteOptions = __private.cocos_core_asset_manager_shared_IRemoteOptions;
- export type AssetType<T = Asset> = Constructor<T>;
+export type ProgressCallback = __private.cocos_core_asset_manager_shared_ProgressCallback;
+export type CompleteCallback<T = any> = __private.cocos_core_asset_manager_shared_CompleteCallbackWithData;
+export type IRemoteOptions = __private.cocos_core_asset_manager_shared_IRemoteOptions;
+export type AssetType<T = Asset> = Constructor<T>;
 
- export interface ILoadResArgs<T extends Asset> {
+export interface ILoadResArgs<T extends Asset> {
     paths?: string | string[];                                          // 资源路径
     dir?: string;                                                       // 目录
     type?: AssetType<T> | null;                                         // 资源类型
@@ -37,7 +37,7 @@ export class ResUtil {
             resArgs.paths = arguments[0];
         } else if (arguments[0] instanceof Array) {
             resArgs.paths = arguments[0];
-        }else if (arguments[0] instanceof Object) {
+        } else if (arguments[0] instanceof Object) {
             return arguments[0];    // 已经是 ILoadResArgs
         } else {
             console.error(`makeLoadResArgs error ${arguments}`);
@@ -66,7 +66,7 @@ export class ResUtil {
     /**
      * 构建远程资源加载参数结构体
      */
-     public static makeLoadRemoteArgs<T extends Asset>(): ILoadResArgs<T> | null {
+    public static makeLoadRemoteArgs<T extends Asset>(): ILoadResArgs<T> | null {
         if (arguments.length < 1) {
             console.error(`makeLoadRemoteArgs error ${arguments}`);
             return null;

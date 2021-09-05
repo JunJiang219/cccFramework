@@ -1,11 +1,11 @@
-import { color, Color, director, Sprite, SpriteFrame, UIOpacity, __private } from "cc";
+import { Color, director, Layers, Sprite, SpriteFrame } from "cc";
 import { log } from "cc";
 import { isValid } from "cc";
 import { view } from "cc";
 import { UITransform } from "cc";
 import { instantiate } from "cc";
 import { Node } from "cc";
-import { ResDefault, DefaultResID } from "../res/ResDefault";
+import { DefaultResID, resDft } from "../res/ResDefault";
 import { resLoader } from "../res/ResLoader";
 import { ProgressCallback } from "../res/ResUtil";
 import { UIShowTypes, UIView } from "./UIView";
@@ -33,11 +33,10 @@ export interface IUIInfo {
 
 /** UI配置结构体 */
 export interface IUIConf {
-    bundle?: string;                // bundle名
     prefab: string;                 // 预制体路径
-    preventTouch?: boolean;         // 是否开启触摸拦截，默认开启
+    bundleName?: string;            // bundle名
+    preventTouch?: boolean;         // 是否开启触摸拦截，默认关闭
     preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 150)，最后一位表示透明度。null表示不设颜色
-    zOrder?: number;                // 层级
 }
 
 export type UIOpenBeforeCallback = (uiId: number, preUIId: number) => void;
@@ -73,6 +72,11 @@ export class UIManager {
     // 获取UI管理类管理的场景名
     public get sceneName() { return this._sceneName; }
 
+    // 设置背景UI层数
+    public setBackGroundUICnt(cnt: number) {
+        this._backGroundUI = cnt;
+    }
+
     /** UI打开前回调 */
     public uiOpenBeforeDelegate: UIOpenBeforeCallback | null = null;
     /** UI打开回调 */
@@ -106,17 +110,18 @@ export class UIManager {
     private _preventTouch(zOrder: number, color?: Color) {
         let node = new Node()
         node.name = 'preventTouch';
+        node.layer = Layers.Enum.UI_2D;
 
         let uiCom = node.addComponent(UITransform);
         uiCom.setContentSize(view.getVisibleSize());
         if (undefined === color) color = new Color(0, 0, 0, 150);   // 取默认值
         if (color) {
             let sprComp = node.addComponent(Sprite);
-            sprComp.type = __private.cocos_2d_components_sprite_SpriteType.SIMPLE;
-            sprComp.sizeMode = __private.cocos_2d_components_sprite_SizeMode.CUSTOM;
+            sprComp.type = Sprite.Type.SIMPLE;
+            sprComp.sizeMode = Sprite.SizeMode.CUSTOM;
             sprComp.color = color;  // 设置颜色及透明度
 
-            ResDefault.getInstance().getRes(DefaultResID.PureWhiteSPF, (asset) => {
+            resDft.getRes(DefaultResID.PureWhiteSF, (asset) => {
                 if (asset) sprComp.spriteFrame = asset as SpriteFrame;
             });
         }
@@ -127,8 +132,9 @@ export class UIManager {
 
         let child = director.getScene()!.getChildByName('Canvas');
         child!.addChild(node);
-        node.setSiblingIndex(zOrder - 0.01);
-       return node;
+        uiCom.priority = zOrder - 0.01;
+        // node.setSiblingIndex(zOrder - 0.01);
+        return node;
     }
 
     /** 自动执行下一个待关闭或待打开的界面 */
@@ -242,11 +248,12 @@ export class UIManager {
             }
             // 异步加载UI预加载的资源
             this._autoLoadRes(uiView, () => {
+                uiView!.uiId = uiId;
                 uiView!.init(...uiArgs);
                 completeCallback(uiView);
                 uiView!.cacheAsset(prefab);
             })
-        });
+        }, this._uiConf[uiId].bundleName);
     }
 
     /**
@@ -264,7 +271,7 @@ export class UIManager {
         uiInfo.uiView = uiView;
         uiView.node.active = true;
         let uiCom = uiView.getComponent(UITransform);
-        if(!uiCom) {
+        if (!uiCom) {
             uiCom = uiView.addComponent(UITransform);
         }
 
@@ -277,8 +284,10 @@ export class UIManager {
                 let uiCom = backGround.addComponent(UITransform);
                 uiCom.setContentSize(view.getVisibleSize());
                 uiView.node.addChild(backGround);
-                backGround.setSiblingIndex(-1);
+                uiCom.priority = -1;
+                // backGround.setSiblingIndex(-1);
             }
+            backGround.layer = Layers.Enum.UI_2D;   // 层级如果不可见，事件也不会响应
             backGround.targetOff(Node.EventType.TOUCH_START);
             backGround.on(Node.EventType.TOUCH_START, (event: any) => {
                 event.propagationStopped = true;
@@ -289,7 +298,8 @@ export class UIManager {
         // 添加到场景中
         let child = director.getScene()!.getChildByName('Canvas');
         child!.addChild(uiView.node);
-        uiView.node.setSiblingIndex(uiInfo.zOrder || this._uiStack.length);
+        uiCom!.priority = uiInfo.zOrder || this._uiStack.length;
+        // uiView.node.setSiblingIndex(uiInfo.zOrder || this._uiStack.length);
 
         // 刷新其他UI
         this._updateUI();
@@ -558,7 +568,7 @@ export class UIManager {
         return null;
     }
 
-    public getTopUI(): UIView | null{
+    public getTopUI(): UIView | null {
         if (this._uiStack.length > 0) {
             return this._uiStack[this._uiStack.length - 1].uiView;
         }

@@ -1,8 +1,8 @@
 
 import { _decorator, Component, SpriteFrame, Sprite, EventTouch, assetManager, resources } from 'cc';
-import { IFsmInitObj, StateMachine } from '../../../base/script/common/StateMachine';
-import { ResLeakChecker } from '../../../base/script/res/ResLeakChecker';
-import { resLoader } from '../../../base/script/res/ResLoader';
+import { IFsmInitObj, StateMachine } from '../../../../base/script/common/StateMachine';
+import { ResLeakChecker } from '../../../../base/script/res/ResLeakChecker';
+import { resLoader } from '../../../../base/script/res/ResLoader';
 const { ccclass, property } = _decorator;
 
 class Test extends StateMachine {
@@ -44,13 +44,19 @@ export class ExRes extends Component {
         //     { name: 'melt',     from: 'solid',  to: 'liquid' },
         //     // { name: 'freeze',   from: 'liquid', to: 'solid'  },
         // ]);
-        test.execTransit('goto', 'gas');
+        test.execTransit('goto', 'liquid');
         console.log(test.state);
+        // test.execTransit('freeze');
+        // console.log(test.state);
     }
 
-    public abc(s: string) {
-        console.log('abc - num: ' + this._num);
-        return s;
+    public async abc(s: string): Promise<string> {
+        return new Promise((resole, reject) => {
+            setTimeout(() => {
+                resole(s);
+                return s;
+            }, 1000);
+        });
     }
 
     private async _initProj(): Promise<void> {
