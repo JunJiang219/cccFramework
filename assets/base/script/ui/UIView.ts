@@ -1,5 +1,5 @@
 import { Enum, _decorator } from "cc";
-import { ResKeeper} from "../res/ResKeeper";
+import { ResKeeper } from "../res/ResKeeper";
 
 /**
  * UIView界面基础类
@@ -54,7 +54,7 @@ export class UIView extends ResKeeper {
      * 当界面被创建时回调，生命周期内只调用一次
      * @param args 可变参数
      */
-    public init(...args : any): void {
+    public init(...args: any[]): void {
 
     }
 
@@ -63,7 +63,7 @@ export class UIView extends ResKeeper {
      * @param fromUI 从哪个UI打开的
      * @param args 可变参数
      */
-    public onOpen(fromUI: number, ...args : any): void {
+    public onOpen(fromUI: number, ...args: any[]): void {
 
     }
 
@@ -86,7 +86,7 @@ export class UIView extends ResKeeper {
      * @param preID 前一个ui
      * @param args 可变参数，
      */
-    public onTop(preID: number, ...args : any): void {
+    public onTop(preID: number, ...args: any[]): void {
 
     }
 }

@@ -6,7 +6,7 @@ import { IUIConf } from '../../../../base/script/ui/UIManager';
 const { ccclass, property } = _decorator;
 
 export enum UIID {
-    Bag,
+    Bag = 1,
     Head,
 }
 
@@ -24,9 +24,9 @@ export class ExUI extends Component {
 
             let uiMgr = sceneMgr.getUIManager();
             uiMgr?.initUIConf(UIConf);
-            uiMgr?.open(UIID.Bag);
+            uiMgr?.open(UIID.Bag, null, 5);
 
-            uiMgr?.open(UIID.Head, () => { }, 1, 2, 3);
+            uiMgr?.open(UIID.Head, null, 1, 2, 3, 4);
         });
     }
 }

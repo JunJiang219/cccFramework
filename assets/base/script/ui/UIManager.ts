@@ -23,12 +23,13 @@ import { UIShowTypes, UIView } from "./UIView";
 
 /** UI栈结构体 */
 export interface IUIInfo {
-    uiId: number;                   // uiId
-    uiView: UIView | null;          // ui对象
-    uiArgs: any;                    // ui初始化参数
-    preventNode?: Node | null;      // ui触摸拦截节点
-    zOrder?: number;                // ui的层级
-    isClose?: boolean;              // ui当前是否关闭
+    uiId: number;                               // uiId
+    uiView: UIView | null;                      // ui对象
+    progressCb: ProgressCallback | null;        // 进度回调
+    uiArgs: any[];                              // ui初始化参数
+    preventNode?: Node | null;                  // ui触摸拦截节点
+    zOrder?: number;                            // ui的层级
+    isClose?: boolean;                          // ui当前是否关闭
 }
 
 /** UI配置结构体 */
@@ -147,7 +148,7 @@ export class UIManager {
         } else if (this._uiOpenQueue.length > 0) {
             let uiQueueInfo = this._uiOpenQueue[0];
             this._uiOpenQueue.splice(0, 1);
-            this.open(uiQueueInfo.uiId, ...uiQueueInfo.uiArgs);
+            this.open(uiQueueInfo.uiId, uiQueueInfo.progressCb, ...uiQueueInfo.uiArgs);
         }
     }
 
@@ -204,7 +205,7 @@ export class UIManager {
      * @param completeCallback 加载完成回调
      * @param uiArgs 初始化参数
      */
-    private _getOrCreateUI(uiId: number, progressCallback: ProgressCallback | null, completeCallback: (uiView: UIView | null) => void, ...uiArgs: any): void {
+    private _getOrCreateUI(uiId: number, progressCallback: ProgressCallback | null, completeCallback: (uiView: UIView | null) => void, ...uiArgs: any[]): void {
         // 如果找到缓存对象，则直接返回
         let uiView: UIView | null = this._uiCache[uiId];
         if (uiView) {
@@ -263,7 +264,7 @@ export class UIManager {
      * @param uiInfo 界面栈对应的信息结构
      * @param uiArgs 界面初始化参数
      */
-    private _onUIOpen(uiId: number, uiView: UIView, uiInfo: IUIInfo, ...uiArgs: any) {
+    private _onUIOpen(uiId: number, uiView: UIView, uiInfo: IUIInfo, ...uiArgs: any[]) {
         if (null == uiView) {
             return;
         }
@@ -326,11 +327,12 @@ export class UIManager {
     }
 
     /** 打开界面并添加到界面栈中 */
-    public open(uiId: number, progressCallback: ProgressCallback | null = null, ...uiArgs: any): void {
+    public open(uiId: number, progressCallback: ProgressCallback | null = null, ...uiArgs: any[]): void {
         let uiInfo: IUIInfo = {
             uiId: uiId,
             uiArgs: uiArgs,
-            uiView: null
+            uiView: null,
+            progressCb: progressCallback
         };
 
         if (this._isOpening || this._isClosing) {
@@ -378,7 +380,7 @@ export class UIManager {
     }
 
     /** 替换栈顶界面 */
-    public replace(uiId: number, ...uiArgs: any) {
+    public replace(uiId: number, ...uiArgs: any[]) {
         this.close(this._uiStack[this._uiStack.length - 1].uiView!);
         this.open(uiId, null, ...uiArgs);
     }
@@ -492,7 +494,7 @@ export class UIManager {
      * @param uiArgs 打开的参数
      * 
      */
-    public closeToUI(uiId: number, ...uiArgs: any): void {
+    public closeToUI(uiId: number, ...uiArgs: any[]): void {
         let idx = this.getUIIndex(uiId);
         if (-1 == idx) {
             return;

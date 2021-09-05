@@ -12,10 +12,9 @@ export class UIBag extends UIView {
         sceneMgr.getUIManager()?.close(this);
     }
 
-    public onOpen(fromUI: number, ...args: any): void {
+    public onOpen(fromUI: number, ...args: any[]): void {
         console.log('onOpen -----');
         console.log(fromUI);
         console.log(args);
-        console.log(arguments);
     }
 }
