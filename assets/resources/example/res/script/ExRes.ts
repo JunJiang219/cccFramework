@@ -25,18 +25,18 @@ export class ExRes extends Component {
         let test = new Test({
             init: 'solid',
             transitions: [
-                { name: 'melt',     from: 'solid',  to: 'liquid' },
-                { name: 'freeze',   from: 'liquid', to: 'solid'  },
-                { name: 'vaporize', from: 'liquid', to: 'gas'    },
-                { name: 'condense', from: 'gas',    to: 'liquid' },
-                { name: 'goto',     from: '*',      to: this.abc.bind(this) }
+                { name: 'melt', from: 'solid', to: 'liquid' },
+                { name: 'freeze', from: 'liquid', to: 'solid' },
+                { name: 'vaporize', from: 'liquid', to: 'gas' },
+                { name: 'condense', from: 'gas', to: 'liquid' },
+                { name: 'goto', from: '*', to: this.abc.bind(this) }
             ],
             methods: {
-                onBeforeTransition: function() { console.log('onBeforeTransition', arguments, arguments[0].event) },
-                onAfterTransition: function() { console.log('onAfterTransition', arguments, arguments[0].event) },
-                onEnterState: function() { console.log('onEnterState', arguments, arguments[0].event) },
-                onLeaveState: function() { console.log('onLeaveState', arguments, arguments[0].event) },
-                onTransition: function() { console.log('onTransition', arguments, arguments[0].event) },
+                onBeforeTransition: function () { console.log('onBeforeTransition', arguments, arguments[0].event) },
+                onAfterTransition: function () { console.log('onAfterTransition', arguments, arguments[0].event) },
+                onEnterState: function () { console.log('onEnterState', arguments, arguments[0].event) },
+                onLeaveState: function () { console.log('onLeaveState', arguments, arguments[0].event) },
+                onTransition: function () { console.log('onTransition', arguments, arguments[0].event) },
             }
         }, "abc");
         console.log(test.allStates());

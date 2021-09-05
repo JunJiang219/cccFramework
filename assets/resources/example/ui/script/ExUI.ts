@@ -25,7 +25,7 @@ export class ExUI extends Component {
             if (uiMgr) {
                 uiMgr.initUIConf(UIConf);
                 uiMgr.open(UIID.Bag, null, 5);
-                uiMgr.open(UIID.Head, null, 1, 2, 3, 4);
+                // uiMgr.open(UIID.Head, null, 1, 2, 3, 4);
             }
         });
     }

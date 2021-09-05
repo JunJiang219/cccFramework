@@ -1,4 +1,4 @@
-import { assetManager, Director, Scene } from "cc";
+import { assetManager, Director, resources, Scene } from "cc";
 import { director } from "cc";
 import { EDITOR } from "cc/env";
 import { UIManager } from "../ui/UIManager";
