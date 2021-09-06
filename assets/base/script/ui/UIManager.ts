@@ -61,7 +61,7 @@ export type UICloseCallback = (uiId: number) => void;
 
 export class UIManager {
     // 场景uuid
-    private _sceneUUID: string = null!;
+    private _sceneUUID: string = '';
     /** 背景UI（有若干层UI是作为背景UI，而不受切换等影响）*/
     private _backGroundUI = 0;
     /** 是否正在关闭UI */
