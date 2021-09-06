@@ -1,9 +1,10 @@
-import { assetManager, Director, resources, Scene } from "cc";
+import { Director, Scene } from "cc";
 import { director } from "cc";
 import { EDITOR } from "cc/env";
 import { UIManager } from "../ui/UIManager";
 
-export interface ISceneData {
+// scene信息结构体
+export interface ISceneInfo {
     uiMgr: UIManager
 }
 
@@ -21,7 +22,7 @@ export class SceneManager {
     }
 
     // 场景数据
-    private _data: Map<string, ISceneData> = new Map<string, ISceneData>();     // <场景uuid, 场景数据>
+    private _sceneInfo: Map<string, ISceneInfo> = new Map<string, ISceneInfo>();     // <场景uuid, 场景数据>
     // 上一场景
     private _lastScene: Scene | null = null;
 
@@ -38,21 +39,23 @@ export class SceneManager {
         this._lastScene = scene;
     }
 
-    public getSceneData(sceneId?: string) {
-        if (!sceneId) sceneId = director.getScene()?.uuid;
-        if (!sceneId) return undefined;     // 没有获取到场景uuid
-        if (!this._data.has(sceneId!)) {
-            let data: ISceneData = {
-                uiMgr: new UIManager(sceneId)
+    // 获取场景信息
+    public getSceneInfo(sceneUUID?: string) {
+        if (!sceneUUID) sceneUUID = director.getScene()?.uuid;
+        if (!sceneUUID) return undefined;
+        if (!this._sceneInfo.has(sceneUUID!)) {
+            let info: ISceneInfo = {
+                uiMgr: new UIManager(sceneUUID)
             };
-            this._data.set(sceneId!, data);
+            this._sceneInfo.set(sceneUUID!, info);
         }
 
-        return this._data.get(sceneId!);
+        return this._sceneInfo.get(sceneUUID!);
     }
 
-    public getUIManager(sceneId?: string) {
-        return this.getSceneData(sceneId)?.uiMgr;
+    // 获取场景管理对象
+    public getUIManager(sceneUUID?: string) {
+        return this.getSceneInfo(sceneUUID)?.uiMgr;
     }
 }
 

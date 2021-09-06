@@ -35,7 +35,7 @@ export interface IUIInfo {
 /** UI配置结构体 */
 export interface IUIConf {
     prefab: string;                 // 预制体路径
-    bundleName?: string;            // bundle名
+    bundleName?: string;            // bundle名，不配则取默认值 'resources'
     preventTouch?: boolean;         // 是否开启触摸拦截，默认关闭
     preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 150)，最后一位表示透明度。null表示不设颜色
 }
@@ -44,8 +44,24 @@ export type UIOpenBeforeCallback = (uiId: number, preUIId: number) => void;
 export type UIOpenCallback = (uiId: number, preUIId: number) => void;
 export type UICloseCallback = (uiId: number) => void;
 
+/** --------------- ui配置示例 ----------------- */
+// export enum UIID {
+//     Bag = 1,
+//     Head,
+// }
+
+// const UIConf: { [uiId: number]: IUIConf } = {
+//     [UIID.Bag]: { prefab: 'example/ui/prefab/UIBag', preventTouch: true },
+//     [UIID.Head]: { prefab: 'example/ui/prefab/UIHead', preventTouch: true },
+// }
+
+// let uiMgr = sceneMgr.getUIManager();
+// if (uiMgr) uiMgr.initUIConf(UIConf);
+/** --------------- ui配置示例 ----------------- */
+
 export class UIManager {
-    private _sceneName: string = null!;
+    // 场景uuid
+    private _sceneUUID: string = null!;
     /** 背景UI（有若干层UI是作为背景UI，而不受切换等影响）*/
     private _backGroundUI = 0;
     /** 是否正在关闭UI */
@@ -64,14 +80,12 @@ export class UIManager {
     /** UI配置 */
     private _uiConf: { [key: number]: IUIConf } = {};
 
-    public constructor(sceneName?: string) {
-        if (!sceneName) sceneName = director.getScene()?.name;
-        this._sceneName = sceneName!;
-        director.getScene
+    public constructor(sceneUUID: string) {
+        this._sceneUUID = sceneUUID;
     }
 
     // 获取UI管理类管理的场景名
-    public get sceneName() { return this._sceneName; }
+    public get sceneUUID() { return this._sceneUUID; }
 
     // 设置背景UI层数
     public setBackGroundUICnt(cnt: number) {
