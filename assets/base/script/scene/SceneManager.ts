@@ -1,4 +1,4 @@
-import { Director, Scene } from "cc";
+import { assetManager, Director, Scene } from "cc";
 import { director } from "cc";
 import { EDITOR } from "cc/env";
 import { UIManager } from "../ui/UIManager";
@@ -34,6 +34,12 @@ export class SceneManager {
         if (uiMgr) {
             uiMgr.closeAll();
             uiMgr.clearCache();
+            let skipBundle = ['main'];  // 这些bundle不能使用 releaseUnusedAssets()
+            assetManager.bundles.forEach((bundle, name) => {
+                if (skipBundle.indexOf(name) == -1) {
+                    bundle.releaseUnusedAssets();   // 释放未引用资源
+                }
+            });
         }
 
         this._lastScene = scene;
