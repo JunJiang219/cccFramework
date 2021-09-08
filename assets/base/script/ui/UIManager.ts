@@ -145,8 +145,8 @@ export class UIManager {
             event.propagationStopped = true;
         }, node);
 
-        let child = director.getScene()!.getChildByName('Canvas');
-        child!.addChild(node);
+        let parent = director.getScene()!.getChildByName('Canvas');
+        parent!.addChild(node);
         uiCom.priority = zOrder - 0.01;
         // node.setSiblingIndex(zOrder - 0.01);
         return node;
@@ -311,8 +311,8 @@ export class UIManager {
         }
 
         // 添加到场景中
-        let child = director.getScene()!.getChildByName('Canvas');
-        child!.addChild(uiView.node);
+        let parent = director.getScene()!.getChildByName('Canvas');
+        parent!.addChild(uiView.node);
         uiCom!.priority = uiInfo.zOrder || this._uiStack.length;
         // uiView.node.setSiblingIndex(uiInfo.zOrder || this._uiStack.length);
 

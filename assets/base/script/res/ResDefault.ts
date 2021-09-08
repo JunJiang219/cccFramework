@@ -5,7 +5,6 @@
 import { Asset, SpriteFrame } from 'cc';
 import { _decorator } from 'cc';
 import { resLoader } from './ResLoader';
-const { ccclass, property } = _decorator;
 
 // 默认资源id
 export enum DefaultResID {
@@ -24,7 +23,6 @@ const ResDefaultConf: { [resId: number]: IResDefConf } = {
     [DefaultResID.PureWhiteSF]: { res: 'texture/pureWhite/spriteFrame', type: SpriteFrame, bundle: 'base' },
 }
 
-@ccclass('ResDefault')
 export class ResDefault {
     private static _instance: ResDefault | null = null;
     private constructor() { }

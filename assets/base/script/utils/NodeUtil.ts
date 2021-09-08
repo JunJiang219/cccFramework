@@ -2,8 +2,14 @@
  * 节点工具类
  */
 import { Node, UITransform, v2, Vec2 } from "cc";
+import { Layers } from "cc";
+import { Sprite } from "cc";
+import { director } from "cc";
+import { SpriteFrame } from "cc";
+import { Color } from "cc";
 import { view } from "cc";
 import { sys } from "cc";
+import { DefaultResID, resDft } from "../res/ResDefault";
 
 interface IRect {
     left?: number,
@@ -17,7 +23,7 @@ export class NodeUtil {
      * 获取htmlElement位置信息
      * @param element 
      */
-     public static getHTMLElementPosition(element: any): IRect {
+    public static getHTMLElementPosition(element: any): IRect {
         let docElem = document.documentElement;
         let leftOffset = window.pageXOffset - docElem.clientLeft;
         let topOffset = window.pageYOffset - docElem.clientTop;
@@ -132,5 +138,40 @@ export class NodeUtil {
         let wp = node.parent?.getComponent(UITransform)?.convertToWorldSpaceAR(node.position);
         console.log('世界节点 :', JSON.stringify(wp));
         NodeUtil.simulation_click(wp!.x, wp!.y, duration);
+    }
+
+    /**
+     * 添加防触摸层
+     * @param parent 父节点
+     * @param zOrder 屏蔽层的层级，默认为0
+     * @param color 屏蔽层颜色
+     */
+    public static preventTouch(parent: Node, zOrder?: number, color?: Color) {
+        let node = new Node()
+        node.name = 'preventTouch';
+        node.layer = Layers.Enum.UI_2D;
+
+        let uiCom = node.addComponent(UITransform);
+        uiCom.setContentSize(view.getVisibleSize());
+        if (undefined === color) color = new Color(0, 0, 0, 150);   // 取默认值
+        if (color) {
+            let sprComp = node.addComponent(Sprite);
+            sprComp.type = Sprite.Type.SIMPLE;
+            sprComp.sizeMode = Sprite.SizeMode.CUSTOM;
+            sprComp.color = color;  // 设置颜色及透明度
+
+            resDft.getRes(DefaultResID.PureWhiteSF, (asset) => {
+                if (asset) sprComp.spriteFrame = asset as SpriteFrame;
+            });
+        }
+
+        node.on(Node.EventType.TOUCH_START, function (event: any) {
+            event.propagationStopped = true;
+        }, node);
+
+        parent.addChild(node);
+        uiCom.priority = zOrder || 0;
+        // node.setSiblingIndex(zOrder - 0.01);
+        return node;
     }
 }
