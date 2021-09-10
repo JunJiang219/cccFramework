@@ -3,16 +3,10 @@ import { director } from "cc";
 import { EDITOR } from "cc/env";
 import { UIManager } from "../ui/UIManager";
 
-// 场景中节点层级定义（UI：0-999）
-export enum SceneLayer {
-    Loading = 1000,     // 加载、等待
-    Dialog,             // 模态提示框
-    Toast,              // 非模态提示
-}
-
 // scene信息结构体
 export interface ISceneInfo {
-    uiMgr: UIManager
+    sceneUUID: string,
+    uiMgr: UIManager,
 }
 
 export class SceneManager {
@@ -58,6 +52,7 @@ export class SceneManager {
         if (!sceneUUID) return undefined;
         if (!this._sceneInfo.has(sceneUUID!)) {
             let info: ISceneInfo = {
+                sceneUUID: sceneUUID,
                 uiMgr: new UIManager(sceneUUID)
             };
             this._sceneInfo.set(sceneUUID!, info);

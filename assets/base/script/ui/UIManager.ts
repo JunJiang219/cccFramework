@@ -69,8 +69,8 @@ export class UIManager {
     /** 是否正在打开UI */
     private _isOpening = false;
 
-    /** UI界面缓存（key为UIId，value为UIView节点）*/
-    private _uiCache: { [UIId: number]: UIView } = {};
+    /** UI界面缓存（key为uiId，value为UIView节点）*/
+    private _uiCache: { [uiId: number]: UIView } = {};
     /** UI界面栈（{UIID + UIView + UIArgs}数组）*/
     private _uiStack: IUIInfo[] = [];
     /** UI待打开列表 */
@@ -147,8 +147,8 @@ export class UIManager {
 
         let parent = director.getScene()!.getChildByName('Canvas');
         parent!.addChild(node);
-        uiCom.priority = zOrder - 0.01;
-        // node.setSiblingIndex(zOrder - 0.01);
+        uiCom.priority = zOrder - 0.1;
+        // node.setSiblingIndex(zOrder - 0.1);
         return node;
     }
 
