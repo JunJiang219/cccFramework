@@ -62,6 +62,7 @@ export type UICloseCallback = (uiId: number) => void;
 export class UIManager {
     // 场景uuid
     private _sceneUUID: string = '';
+    public get sceneUUID() { return this._sceneUUID; }
     /** 背景UI（有若干层UI是作为背景UI，而不受切换等影响）*/
     private _backGroundUI = 0;
     /** 是否正在关闭UI */
@@ -83,9 +84,6 @@ export class UIManager {
     public constructor(sceneUUID: string) {
         this._sceneUUID = sceneUUID;
     }
-
-    // 获取UI管理类管理的场景名
-    public get sceneUUID() { return this._sceneUUID; }
 
     // 设置背景UI层数
     public setBackGroundUICnt(cnt: number) {

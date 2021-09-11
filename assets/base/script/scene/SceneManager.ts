@@ -1,12 +1,14 @@
 import { assetManager, Director, Scene } from "cc";
 import { director } from "cc";
 import { EDITOR } from "cc/env";
+import { TipsManager } from "../ui/TipsManager";
 import { UIManager } from "../ui/UIManager";
 
 // scene信息结构体
 export interface ISceneInfo {
     sceneUUID: string,
     uiMgr: UIManager,
+    tipsMgr: TipsManager,
 }
 
 export class SceneManager {
@@ -53,7 +55,8 @@ export class SceneManager {
         if (!this._sceneInfo.has(sceneUUID!)) {
             let info: ISceneInfo = {
                 sceneUUID: sceneUUID,
-                uiMgr: new UIManager(sceneUUID)
+                uiMgr: new UIManager(sceneUUID),
+                tipsMgr: new TipsManager(sceneUUID),
             };
             this._sceneInfo.set(sceneUUID!, info);
         }
@@ -61,9 +64,14 @@ export class SceneManager {
         return this._sceneInfo.get(sceneUUID!);
     }
 
-    // 获取场景管理对象
+    // 获取场景管理对象 ui
     public getUIManager(sceneUUID?: string) {
         return this.getSceneInfo(sceneUUID)?.uiMgr;
+    }
+
+    // 获取场景管理对象 tips
+    public getTipsManager(sceneUUID?: string) {
+        return this.getSceneInfo(sceneUUID)?.tipsMgr;
     }
 }
 
