@@ -12,24 +12,28 @@ export type DialogCallback = { callback: Function, target?: any };
 @ccclass('BaseDialog')
 export class BaseDialog extends ResKeeper {
 
-    // 回调
-    protected _okCb: DialogCallback | null = null;
-    protected _noCb: DialogCallback | null = null;
+    // 确认、取消回调
+    private _okCb: DialogCallback | null = null;
+    private _noCb: DialogCallback | null = null;
 
+    // 界面索引
+    private _uiIndex: number = 0;
+    public get uiIndex() { return this._uiIndex; }
+    /**  静态变量，用于区分相同界面的不同实例 */
+    private static _uiCnt: number = 0;
+
+    /********************** UI的回调 ***********************/
     /**
      * 当界面被创建时回调，生命周期内只调用一次
      * @param args 可变参数
      */
     public init(...args: any[]): void {
-
+        this._uiIndex = ++BaseDialog._uiCnt;
     }
 
-    /**
-     * 当界面被打开时回调，每次调用Open时回调
-     * @param args 可变参数
-     */
-    public onOpen(...args: any[]): void {
-
+    public onOpen(content: string, okCallback?: DialogCallback, noCallback?: DialogCallback, ...args: any[]) {
+        if (okCallback) this._okCb = okCallback;
+        if (noCallback) this._noCb = noCallback;
     }
 
     /**
@@ -38,13 +42,13 @@ export class BaseDialog extends ResKeeper {
     public onOpenAniOver(): void {
     }
 
-    // 确认按钮被点击
-    public onOKTouch(...args: any[]) {
+    /**
+     * 当界面被关闭时回调，每次调用Close时回调
+     * 返回值会传递给下一个界面
+     */
+    public onClose(): any {
 
     }
 
-    // 取消按钮被点击
-    public onNOTouch(...args: any[]) {
-
-    }
+    /********************** UI的回调 ***********************/
 }

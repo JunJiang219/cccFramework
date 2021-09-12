@@ -56,7 +56,10 @@ export type UICloseCallback = (uiId: number) => void;
 // }
 
 // let uiMgr = sceneMgr.getUIManager();
-// if (uiMgr) uiMgr.initUIConf(UIConf);
+// if (uiMgr) {
+//     uiMgr.initUIConf(UIConf);
+//     uiMgr.open(UIID.Bag);
+// }
 /** --------------- ui配置示例 ----------------- */
 
 export class UIManager {
@@ -317,7 +320,7 @@ export class UIManager {
         // 刷新其他UI
         this._updateUI();
 
-        // 从那个界面打开的
+        // 从哪个界面打开的
         let fromUIID = 0;
         if (this._uiStack.length > 1) {
             fromUIID = this._uiStack[this._uiStack.length - 2].uiId

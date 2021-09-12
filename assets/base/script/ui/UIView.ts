@@ -46,8 +46,11 @@ export class UIView extends ResKeeper {
 
     /** 界面id */
     public uiId: number = 0;
+    // 界面索引
+    private _uiIndex: number = 0;
+    public get uiIndex() { return this._uiIndex; }
     /**  静态变量，用于区分相同界面的不同实例 */
-    private static _uiIndex: number = 0;
+    private static _uiCnt: number = 0;
 
     /********************** UI的回调 ***********************/
     /**
@@ -55,7 +58,7 @@ export class UIView extends ResKeeper {
      * @param args 可变参数
      */
     public init(...args: any[]): void {
-
+        this._uiIndex = ++UIView._uiCnt;
     }
 
     /**
