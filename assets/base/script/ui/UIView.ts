@@ -40,10 +40,6 @@ export class UIView extends ResKeeper {
     @property
     cache: boolean = false;
 
-    // 独立ui，显示隐藏不受其它ui影响
-    @property
-    independent: boolean = false;
-
     /** 界面显示类型 */
     @property({ type: Enum(UIShowTypes) })
     showType: UIShowTypes = UIShowTypes.UISingle;

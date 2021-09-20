@@ -39,7 +39,6 @@ export interface IUIConf {
     preventTouch?: boolean;         // 是否开启触摸拦截，默认关闭
     preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 150)，最后一位表示透明度。null表示不设颜色
     zOrder?: number;                // 指定层级
-    multiInstance?: boolean;        // 是否允许生成多实例
 }
 
 export type UIOpenBeforeCallback = (uiId: number, preUIId: number) => void;
@@ -202,7 +201,7 @@ export class UIManager {
             } else if (UIShowTypes.UISingle == mode) {
                 for (let i = 0; i < this._backGroundUI; ++i) {
                     if (this._uiStack[i]) {
-                        if (!this._uiStack[i].uiView!.independent) this._uiStack[i].uiView!.node.active = true;
+                        this._uiStack[i].uiView!.node.active = true;
                     }
                 }
                 hideIndex = this._backGroundUI;
@@ -211,7 +210,7 @@ export class UIManager {
         }
         // 隐藏不应该显示的部分UI
         for (let hide: number = hideIndex; hide < showIndex; ++hide) {
-            if (!this._uiStack[hide].uiView!.independent) this._uiStack[hide].uiView!.node.active = false;
+            this._uiStack[hide].uiView!.node.active = false;
         }
     }
 

@@ -9,14 +9,20 @@ const { ccclass, property } = _decorator;
 // 模态框回调
 export type DialogCallback = { callback: Function, target?: any };
 
+// 对话框参数
+export interface IDialogArgs {
+    content: string,
+    okCallback?: DialogCallback,
+    noCallback?: DialogCallback,
+}
+
 @ccclass('DialogBase')
 export class DialogBase extends ResKeeper {
 
-    // 确认、取消回调
-    private _okCb: DialogCallback | null = null;
-    private _noCb: DialogCallback | null = null;
-    // 可变参数
-    private _uiArgs: any[] = [];
+    // 对话框参数
+    private _uiArgs: IDialogArgs | null = null;
+    // 额外参数
+    protected _exArgs: any[] = null!;
 
     // 界面索引
     private _uiIndex: number = 0;
@@ -31,19 +37,17 @@ export class DialogBase extends ResKeeper {
      */
     public init(...args: any[]): void {
         this._uiIndex = ++DialogBase._uiCnt;
+        this._exArgs = args;
     }
 
     /**
      * 当界面被打开时回调，每次调用Open时回调
-     * @param content 提示内容
-     * @param okCallback 确认回调
-     * @param noCallback 取消回调
+     * @param uiArgs
      * @param args 可变参数
      */
-    public onOpen(content: string, okCallback?: DialogCallback, noCallback?: DialogCallback, ...args: any[]) {
-        if (okCallback) this._okCb = okCallback;
-        if (noCallback) this._noCb = noCallback;
-        this._uiArgs = args;
+    public onOpen(uiArgs: IDialogArgs, ...args: any[]) {
+        this._uiArgs = uiArgs;
+        this._exArgs = args;
     }
 
     /**
@@ -52,28 +56,30 @@ export class DialogBase extends ResKeeper {
     public onOpenAniOver(): void {
     }
 
-    // 确认按钮响应
-    public onOKTouch() {
-        if (this._okCb) {
-            let callback = this._okCb.callback;
-            let target = this._okCb.target;
+    // 确认处理
+    public okHandler() {
+        let okCallback = this._uiArgs?.okCallback;
+        if (okCallback) {
+            let callback = okCallback.callback;
+            let target = okCallback.target;
             if (target) {
-                callback.call(target, ...this._uiArgs);
+                callback.call(target, ...this._exArgs);
             } else {
-                callback(...this._uiArgs);
+                callback(...this._exArgs);
             }
         }
     }
 
-    // 取消按钮响应
-    public onNOTouch() {
-        if (this._noCb) {
-            let callback = this._noCb.callback;
-            let target = this._noCb.target;
+    // 取消处理
+    public noHandler() {
+        let noCallback = this._uiArgs?.noCallback;
+        if (noCallback) {
+            let callback = noCallback.callback;
+            let target = noCallback.target;
             if (target) {
-                callback.call(target, ...this._uiArgs);
+                callback.call(target, ...this._exArgs);
             } else {
-                callback(...this._uiArgs);
+                callback(...this._exArgs);
             }
         }
     }
