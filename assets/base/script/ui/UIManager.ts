@@ -38,6 +38,8 @@ export interface IUIConf {
     bundleName?: string;            // bundle名，不配则取默认值 'resources'
     preventTouch?: boolean;         // 是否开启触摸拦截，默认关闭
     preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 150)，最后一位表示透明度。null表示不设颜色
+    zOrder?: number;                // 指定层级
+    multiInstance?: boolean;        // 是否允许生成多实例
 }
 
 export type UIOpenBeforeCallback = (uiId: number, preUIId: number) => void;
@@ -75,7 +77,7 @@ export class UIManager {
 
     /** UI界面缓存（key为uiId，value为UIView节点）*/
     private _uiCache: { [uiId: number]: UIView } = {};
-    /** UI界面栈（{UIID + UIView + UIArgs}数组）*/
+    /** UI界面栈数组）*/
     private _uiStack: IUIInfo[] = [];
     /** UI待打开列表 */
     private _uiOpenQueue: IUIInfo[] = [];
@@ -200,7 +202,7 @@ export class UIManager {
             } else if (UIShowTypes.UISingle == mode) {
                 for (let i = 0; i < this._backGroundUI; ++i) {
                     if (this._uiStack[i]) {
-                        this._uiStack[i].uiView!.node.active = true;
+                        if (!this._uiStack[i].uiView!.independent) this._uiStack[i].uiView!.node.active = true;
                     }
                 }
                 hideIndex = this._backGroundUI;
@@ -209,7 +211,7 @@ export class UIManager {
         }
         // 隐藏不应该显示的部分UI
         for (let hide: number = hideIndex; hide < showIndex; ++hide) {
-            this._uiStack[hide].uiView!.node.active = false;
+            if (!this._uiStack[hide].uiView!.independent) this._uiStack[hide].uiView!.node.active = false;
         }
     }
 
@@ -264,11 +266,10 @@ export class UIManager {
             }
             // 异步加载UI预加载的资源
             this._autoLoadRes(uiView, () => {
-                uiView!.uiId = uiId;
-                uiView!.init(...uiArgs);
-                completeCallback(uiView);
+                uiView!.init(uiId, ...uiArgs);
                 uiView!.cacheAsset(prefab);
-            })
+                completeCallback(uiView);
+            });
         }, this._uiConf[uiId].bundleName);
     }
 
@@ -364,8 +365,20 @@ export class UIManager {
         }
 
         // 设置UI的zOrder
-        uiInfo.zOrder = this._uiStack.length + 1;
+        if (undefined === this._uiConf[uiId].zOrder) {
+            // 自动生成zOrder()
+            let autoZCnt = 0, tmpId = 0;
+            for (let i = 0; i < this._uiStack.length; ++i) {
+                tmpId = this._uiStack[i].uiId;
+                if (undefined === this._uiConf[tmpId].zOrder) ++autoZCnt;
+            }
+            uiInfo.zOrder = autoZCnt + 1;
+        } else {
+            // 主动指定zOrder
+            uiInfo.zOrder = this._uiConf[uiId].zOrder as number;
+        }
         this._uiStack.push(uiInfo);
+        this._uiStack.sort(this._sortUIStack.bind(this));
 
         // 先屏蔽点击
         if (this._uiConf[uiId].preventTouch) {
@@ -392,6 +405,11 @@ export class UIManager {
             this._isOpening = false;
             this._autoExecNextUI();
         }, ...uiArgs);
+    }
+
+    // ui栈排序（zOrder升序）
+    private _sortUIStack(uiA: IUIInfo, uiB: IUIInfo) {
+        return (uiA.zOrder! - uiB.zOrder!);
     }
 
     /** 替换栈顶界面 */

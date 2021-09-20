@@ -40,13 +40,18 @@ export class UIView extends ResKeeper {
     @property
     cache: boolean = false;
 
+    // 独立ui，显示隐藏不受其它ui影响
+    @property
+    independent: boolean = false;
+
     /** 界面显示类型 */
     @property({ type: Enum(UIShowTypes) })
     showType: UIShowTypes = UIShowTypes.UISingle;
 
     /** 界面id */
-    public uiId: number = 0;
-    // 界面索引
+    private _uiId: number = 0;
+    public get uiId() { return this._uiId; }
+    // 界面索引，用于区分相同界面不同实例
     private _uiIndex: number = 0;
     public get uiIndex() { return this._uiIndex; }
     /**  静态变量，用于区分相同界面的不同实例 */
@@ -55,9 +60,11 @@ export class UIView extends ResKeeper {
     /********************** UI的回调 ***********************/
     /**
      * 当界面被创建时回调，生命周期内只调用一次
+     * @param uiId 界面id
      * @param args 可变参数
      */
-    public init(...args: any[]): void {
+    public init(uiId: number, ...args: any[]): void {
+        this._uiId = uiId;
         this._uiIndex = ++UIView._uiCnt;
     }
 
