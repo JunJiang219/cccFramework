@@ -29,7 +29,7 @@ function sortListener(a: CallBackTarget, b: CallBackTarget): number {
 
 export class EventManager {
     private static _instance: EventManager | null = null;
-    private constructor() {}
+    private constructor() { }
     public static getInstance(): EventManager {
         if (!this._instance) {
             this._instance = new EventManager();
@@ -118,4 +118,4 @@ export class EventManager {
     }
 }
 
-export let eventMgr = EventManager.getInstance();
+export let evtMgr = EventManager.getInstance();

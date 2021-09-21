@@ -1,6 +1,8 @@
 import { assetManager, Director, Scene } from "cc";
 import { director } from "cc";
 import { EDITOR } from "cc/env";
+import { BaseMsg } from "../common/BaseDefine";
+import { evtMgr } from "../common/EventManager";
 import { TipsManager } from "../ui/TipsManager";
 import { UIManager } from "../ui/UIManager";
 
@@ -21,6 +23,7 @@ export class SceneManager {
     private constructor() {
         director.on(Director.EVENT_BEFORE_SCENE_LAUNCH, (scene) => {
             this._onSceneChange(scene);
+            evtMgr.raiseEvent(BaseMsg.MSG_BEFORE_SCENE_LAUNCH);
         });
     }
 
