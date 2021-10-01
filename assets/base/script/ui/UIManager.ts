@@ -39,6 +39,7 @@ export interface IUIConf {
     preventTouch?: boolean;         // 是否开启触摸拦截，默认关闭
     preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 150)，最后一位表示透明度。null表示不设颜色
     zOrder?: number;                // 指定层级
+    multiInstance?: boolean;        // 是否允许生成多个实例
 }
 
 export type UIOpenBeforeCallback = (uiId: number, preUIId: number) => void;
@@ -359,7 +360,7 @@ export class UIManager {
         let uiIndex = this.getUIIndex(uiId);
         if (-1 != uiIndex) {
             // 重复打开了同一个界面，直接回到该界面
-            this.closeToUI(uiId, ...uiArgs);
+            this.closeToUI(uiId, true, ...uiArgs);
             return;
         }
 
@@ -523,15 +524,17 @@ export class UIManager {
     /**
      * 关闭界面，一直关闭到顶部为uiId的界面，为避免循环打开UI导致UI栈溢出
      * @param uiId 要关闭到的uiId（关闭其顶部的ui）
+     * @param bOpenSelf 是否重新打开自己
      * @param uiArgs 打开的参数
      * 
      */
-    public closeToUI(uiId: number, ...uiArgs: any[]): void {
+    public closeToUI(uiId: number, bOpenSelf = true, ...uiArgs: any[]): void {
         let idx = this.getUIIndex(uiId);
         if (-1 == idx) {
             return;
         }
 
+        idx = bOpenSelf ? idx : idx + 1;
         for (let i = this._uiStack.length - 1; i >= idx; --i) {
             let uiInfo = this._uiStack.pop();
             if (!uiInfo) {
@@ -567,7 +570,7 @@ export class UIManager {
         this._updateUI();
         this._uiOpenQueue = [];
         this._uiCloseQueue = [];
-        this.open(uiId, null, ...uiArgs);
+        bOpenSelf && this.open(uiId, null, ...uiArgs);
     }
 
     /** 清理界面缓存 */
