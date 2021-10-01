@@ -77,7 +77,7 @@ export class UIManager {
 
     /** UI界面缓存（key为uiId，value为UIView节点）*/
     private _uiCache: { [uiId: number]: UIView } = {};
-    /** UI界面栈数组）*/
+    /** UI界面栈 */
     private _uiStack: IUIInfo[] = [];
     /** UI待打开列表 */
     private _uiOpenQueue: IUIInfo[] = [];
@@ -366,7 +366,7 @@ export class UIManager {
 
         // 设置UI的zOrder
         if (undefined === this._uiConf[uiId].zOrder) {
-            // 自动生成zOrder()
+            // 自动生成zOrder
             let autoZCnt = 0, tmpId = 0;
             for (let i = 0; i < this._uiStack.length; ++i) {
                 tmpId = this._uiStack[i].uiId;
@@ -473,7 +473,7 @@ export class UIManager {
             this._isClosing = false;
             // 显示之前的界面
             if (preUIInfo && preUIInfo.uiView && this.isTopUI(preUIInfo.uiId)) {
-                // 如果之前的界面弹到了最上方（中间有肯能打开了其他界面）
+                // 如果之前的界面弹到了最上方（中间有可能打开了其他界面）
                 preUIInfo.uiView.node.active = true
                 // 回调onTop
                 preUIInfo.uiView.onTop(uiId, uiView!.onClose());
