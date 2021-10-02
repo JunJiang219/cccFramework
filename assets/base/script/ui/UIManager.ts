@@ -1,4 +1,4 @@
-import { Color, director, Layers, Sprite, SpriteFrame } from "cc";
+import { Color, director, find, Layers, Sprite, SpriteFrame } from "cc";
 import { log } from "cc";
 import { isValid } from "cc";
 import { view } from "cc";
@@ -39,7 +39,6 @@ export interface IUIConf {
     preventTouch?: boolean;         // 是否开启触摸拦截，默认关闭
     preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 150)，最后一位表示透明度。null表示不设颜色
     zOrder?: number;                // 指定层级
-    multiInstance?: boolean;        // 是否允许生成多个实例
 }
 
 export type UIOpenBeforeCallback = (uiId: number, preUIId: number) => void;
@@ -313,7 +312,7 @@ export class UIManager {
         }
 
         // 添加到场景中
-        let parent = director.getScene()!.getChildByName('Canvas');
+        let parent = find('Canvas');
         parent!.addChild(uiView.node);
         uiCom!.priority = uiInfo.zOrder || this._uiStack.length;
         // uiView.node.setSiblingIndex(uiInfo.zOrder || this._uiStack.length);

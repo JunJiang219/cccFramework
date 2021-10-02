@@ -9,7 +9,7 @@ const { ccclass, property } = _decorator;
 // 模态框回调
 export type DialogCallback = { callback: Function, target?: any };
 
-// 对话框参数
+// 模态框参数
 export interface IDialogArgs {
     content: string,
     okCallback?: DialogCallback,
@@ -19,8 +19,12 @@ export interface IDialogArgs {
 @ccclass('DialogBase')
 export class DialogBase extends ResKeeper {
 
+    /** 快速关闭 */
+    @property
+    quickClose: boolean = false;
+
     // 对话框参数
-    private _uiArgs: IDialogArgs | null = null;
+    protected _uiArgs: IDialogArgs | null = null;
     // 额外参数
     protected _exArgs: any[] = null!;
 

@@ -8,7 +8,6 @@ import { UIManager } from "../ui/UIManager";
 
 // scene信息结构体
 export interface ISceneInfo {
-    sceneUUID: string,
     uiMgr: UIManager,
     tipsMgr: TipsManager,
 }
@@ -36,8 +35,9 @@ export class SceneManager {
     private _onSceneChange(scene: Scene) {
         if (EDITOR || this._lastScene == scene) return;
         // 释放上一场景动态加载资源
-        let uiMgr = this.getUIManager(this._lastScene?.uuid);
-        if (uiMgr) {
+        let sceneInfo = this.getSceneInfo(this._lastScene?.uuid);
+        if (sceneInfo) {
+            let uiMgr = sceneInfo.uiMgr;
             uiMgr.closeAll();
             uiMgr.clearCache();
             let skipBundle = ['main'];  // 这些bundle不能使用 releaseUnusedAssets()
@@ -57,7 +57,6 @@ export class SceneManager {
         if (!sceneUUID) return undefined;
         if (!this._sceneInfo.has(sceneUUID!)) {
             let info: ISceneInfo = {
-                sceneUUID: sceneUUID,
                 uiMgr: new UIManager(sceneUUID),
                 tipsMgr: new TipsManager(sceneUUID),
             };
