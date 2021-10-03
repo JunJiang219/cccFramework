@@ -23,7 +23,8 @@ import { UIShowTypes, UIView } from "./UIView";
 
 /** UI栈结构体 */
 export interface IUIInfo {
-    uiId: number;                               // uiId
+    uiId: number;                               // uiView.uiId
+    uiOrder: number;                            // uiView.uiOrder
     uiView: UIView | null;                      // ui对象
     progressCb: ProgressCallback | null;        // 进度回调
     uiArgs: any[];                              // ui初始化参数
@@ -38,7 +39,8 @@ export interface IUIConf {
     bundleName?: string;            // bundle名，不配则取默认值 'resources'
     preventTouch?: boolean;         // 是否开启触摸拦截，默认关闭
     preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 150)，最后一位表示透明度。null表示不设颜色
-    zOrder?: number;                // 指定层级
+    zOrder?: number;                // 指定层级(未指定ui从1开始递增；指定ui设为该值，如有多实例，在此基础上递增)
+    multiInstance?: boolean;        // 是否允许生成多个实例(默认否)
 }
 
 export type UIOpenBeforeCallback = (uiId: number, preUIId: number) => void;
@@ -284,6 +286,7 @@ export class UIManager {
             return;
         }
         // 激活界面
+        uiInfo.uiOrder = uiView.uiOrder;
         uiInfo.uiView = uiView;
         uiView.node.active = true;
         let uiCom = uiView.getComponent(UITransform);
@@ -314,8 +317,8 @@ export class UIManager {
         // 添加到场景中
         let parent = find('Canvas');
         parent!.addChild(uiView.node);
-        uiCom!.priority = uiInfo.zOrder || this._uiStack.length;
-        // uiView.node.setSiblingIndex(uiInfo.zOrder || this._uiStack.length);
+        uiCom!.priority = uiInfo.zOrder!;
+        // uiView.node.setSiblingIndex(uiInfo.zOrder);
 
         // 刷新其他UI
         this._updateUI();
@@ -345,6 +348,7 @@ export class UIManager {
     public open(uiId: number, progressCallback: ProgressCallback | null = null, ...uiArgs: any[]): void {
         let uiInfo: IUIInfo = {
             uiId: uiId,
+            uiOrder: 0,
             uiArgs: uiArgs,
             uiView: null,
             progressCb: progressCallback
@@ -356,8 +360,8 @@ export class UIManager {
             return;
         }
 
-        let uiIndex = this.getUIIndex(uiId);
-        if (-1 != uiIndex) {
+        let idxList = this.getUIIndex(uiId);
+        if (idxList.length > 0) {
             // 重复打开了同一个界面，直接回到该界面
             this.closeToUI(uiId, true, ...uiArgs);
             return;
@@ -374,7 +378,8 @@ export class UIManager {
             uiInfo.zOrder = autoZCnt + 1;
         } else {
             // 主动指定zOrder
-            uiInfo.zOrder = this._uiConf[uiId].zOrder as number;
+            let cnt = this.getUICnt(uiId);
+            uiInfo.zOrder = this._uiConf[uiId].zOrder! + cnt;
         }
         this._uiStack.push(uiInfo);
         this._uiStack.sort(this._sortUIStack.bind(this));
@@ -471,7 +476,7 @@ export class UIManager {
         let close = () => {
             this._isClosing = false;
             // 显示之前的界面
-            if (preUIInfo && preUIInfo.uiView && this.isTopUI(preUIInfo.uiId)) {
+            if (preUIInfo && preUIInfo.uiView && this.isTopUI(preUIInfo.uiId, preUIInfo.uiOrder)) {
                 // 如果之前的界面弹到了最上方（中间有可能打开了其他界面）
                 preUIInfo.uiView.node.active = true
                 // 回调onTop
@@ -528,11 +533,12 @@ export class UIManager {
      * 
      */
     public closeToUI(uiId: number, bOpenSelf = true, ...uiArgs: any[]): void {
-        let idx = this.getUIIndex(uiId);
-        if (-1 == idx) {
+        let idxList = this.getUIIndex(uiId);
+        if (idxList.length <= 0) {
             return;
         }
 
+        let idx = idxList[idxList.length - 1];
         idx = bOpenSelf ? idx : idx + 1;
         for (let i = this._uiStack.length - 1; i >= idx; --i) {
             let uiInfo = this._uiStack.pop();
@@ -587,23 +593,54 @@ export class UIManager {
     }
 
     /******************** UI的便捷接口 *******************/
-    public isTopUI(uiId: number): boolean {
+    /**
+     * 是否栈顶ui
+     * @param uiId 界面id
+     * @param uiOrder 界面索引，缺省则只匹配uiId
+     * @returns 
+     */
+    public isTopUI(uiId: number, uiOrder?: number): boolean {
         if (this._uiStack.length == 0) {
             return false;
         }
-        return this._uiStack[this._uiStack.length - 1].uiId == uiId;
+
+        let uiInfo = this._uiStack[this._uiStack.length - 1];
+        let bIs = (uiInfo.uiId == uiId);
+        if (undefined != uiOrder) bIs = bIs && (uiInfo.uiOrder == uiOrder);
+        return bIs;
     }
 
-    public getUI(uiId: number): UIView | null {
+    /**
+     * 获取uiView对象数组
+     * @param uiId 界面id
+     * @param uiOrder 界面索引，缺省则只匹配uiId
+     * @returns 
+     */
+    public getUI(uiId: number, uiOrder?: number): UIView[] {
+        let uiList: UIView[] = [];
+        let uiConf = this._uiConf[uiId];
+        let multiInstance = uiConf && uiConf.multiInstance;
         for (let index = 0; index < this._uiStack.length; index++) {
             const element = this._uiStack[index];
             if (uiId == element.uiId) {
-                return element.uiView;
+                if (undefined != uiOrder) {
+                    if (uiOrder == element.uiOrder) {
+                        uiList.push(element.uiView!);
+                        break;
+                    }
+                } else {
+                    uiList.push(element.uiView!);
+                    if (!multiInstance) break;  // 优化，减少计算量
+                }
             }
         }
-        return null;
+        return uiList;
     }
 
+    /**
+     * 获取栈顶ui
+     * @returns 
+     */
     public getTopUI(): UIView | null {
         if (this._uiStack.length > 0) {
             return this._uiStack[this._uiStack.length - 1].uiView;
@@ -611,13 +648,45 @@ export class UIManager {
         return null;
     }
 
-    public getUIIndex(uiId: number): number {
+    /**
+     * 获取ui栈指定ui所处位置索引数组
+     * @param uiId 界面id
+     * @param uiOrder 界面索引，缺省则只匹配uiId
+     * @returns 
+     */
+    public getUIIndex(uiId: number, uiOrder?: number): number[] {
+        let idxList: number[] = [];
+        let uiConf = this._uiConf[uiId];
+        let multiInstance = uiConf && uiConf.multiInstance;
         for (let index = 0; index < this._uiStack.length; index++) {
             const element = this._uiStack[index];
             if (uiId == element.uiId) {
-                return index;
+                if (undefined != uiOrder) {
+                    if (uiOrder == element.uiOrder) {
+                        idxList.push(index);
+                        break;
+                    }
+                } else {
+                    idxList.push(index);
+                    if (!multiInstance) break;  // 优化，减少计算量
+                }
             }
         }
-        return -1;
+        return idxList;
+    }
+
+    // 获取ui栈指定uiId界面实例数量
+    public getUICnt(uiId: number): number {
+        let cnt = 0;
+        let uiConf = this._uiConf[uiId];
+        let multiInstance = uiConf && uiConf.multiInstance;
+        for (let index = 0; index < this._uiStack.length; index++) {
+            const element = this._uiStack[index];
+            if (uiId == element.uiId) {
+                ++cnt;
+                if (!multiInstance) break;  // 优化，减少计算量
+            }
+        }
+        return cnt;
     }
 }

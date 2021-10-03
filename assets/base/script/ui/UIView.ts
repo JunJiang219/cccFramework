@@ -48,8 +48,8 @@ export class UIView extends ResKeeper {
     private _uiId: number = 0;
     public get uiId() { return this._uiId; }
     // 界面索引，用于区分相同界面不同实例
-    private _uiIndex: number = 0;
-    public get uiIndex() { return this._uiIndex; }
+    private _uiOrder: number = 0;
+    public get uiOrder() { return this._uiOrder; }
     /**  静态变量，用于区分相同界面的不同实例 */
     private static _uiCnt: number = 0;
 
@@ -61,7 +61,7 @@ export class UIView extends ResKeeper {
      */
     public init(uiId: number, ...args: any[]): void {
         this._uiId = uiId;
-        this._uiIndex = ++UIView._uiCnt;
+        this._uiOrder = ++UIView._uiCnt;
     }
 
     /**
