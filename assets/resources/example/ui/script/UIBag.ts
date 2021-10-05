@@ -1,5 +1,5 @@
 
-import { find, _decorator } from 'cc';
+import { find, UITransform, _decorator } from 'cc';
 import { sceneMgr } from '../../../../base/script/scene/SceneManager';
 import { UIView } from '../../../../base/script/ui/UIView';
 import { UIID } from './ExUI';

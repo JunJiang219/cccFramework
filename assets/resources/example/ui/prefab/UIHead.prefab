@@ -1000,7 +1000,7 @@
       "__id__": 46
     },
     "quickClose": false,
-    "cache": false,
+    "cache": true,
     "showType": 1,
     "_id": ""
   },

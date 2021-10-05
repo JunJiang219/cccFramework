@@ -40,7 +40,7 @@ export interface IUIConf {
     preventTouch?: boolean;         // 是否开启触摸拦截，默认关闭
     preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 150)，最后一位表示透明度。null表示不设颜色
     zOrder?: number;                // 指定层级(未指定ui从1开始递增；指定ui设为该值，如有多实例，在此基础上递增)
-    multiInstance?: boolean;        // 是否允许生成多个实例(默认否)
+    multiInstance?: boolean;        // 是否允许生成多个实例(默认否)，多实例ui暂时不做缓存
 }
 
 export type UIOpenBeforeCallback = (uiId: number, preUIId: number) => void;
@@ -326,7 +326,11 @@ export class UIManager {
         // 从哪个界面打开的
         let fromUIID = 0;
         if (this._uiStack.length > 1) {
-            fromUIID = this._uiStack[this._uiStack.length - 2].uiId
+            if (this.isTopUI(uiView)) {
+                fromUIID = this._uiStack[this._uiStack.length - 2].uiId;
+            } else {
+                fromUIID = this._uiStack[this._uiStack.length - 1].uiId;
+            }
         }
 
         // 打开界面之前回调
@@ -360,15 +364,24 @@ export class UIManager {
             return;
         }
 
-        let idxList = this.getUIIndex(uiId);
-        if (idxList.length > 0) {
-            // 重复打开了同一个界面，直接回到该界面
-            this.closeToUI(uiId, true, ...uiArgs);
+        let uiConf = this._uiConf[uiId];
+        if (!uiConf) {
+            log(`open ${uiId} failed! not configured`);
             return;
         }
 
+        if (!uiConf.multiInstance) {
+            // 单实例ui
+            let idxList = this.getUIIndex(uiId);
+            if (idxList.length > 0) {
+                // 重复打开了同一个界面，直接回到该界面
+                this.closeToUI(uiId, true, ...uiArgs);
+                return;
+            }
+        }
+
         // 设置UI的zOrder
-        if (undefined === this._uiConf[uiId].zOrder) {
+        if (undefined === uiConf.zOrder) {
             // 自动生成zOrder
             let autoZCnt = 0, tmpId = 0;
             for (let i = 0; i < this._uiStack.length; ++i) {
@@ -379,14 +392,14 @@ export class UIManager {
         } else {
             // 主动指定zOrder
             let cnt = this.getUICnt(uiId);
-            uiInfo.zOrder = this._uiConf[uiId].zOrder! + cnt;
+            uiInfo.zOrder = uiConf.zOrder! + cnt;
         }
         this._uiStack.push(uiInfo);
         this._uiStack.sort(this._sortUIStack.bind(this));
 
         // 先屏蔽点击
-        if (this._uiConf[uiId].preventTouch) {
-            uiInfo.preventNode = this._preventTouch(uiInfo.zOrder, this._uiConf[uiId].preventColor!);
+        if (uiConf.preventTouch) {
+            uiInfo.preventNode = this._preventTouch(uiInfo.zOrder, uiConf.preventColor!);
         }
 
         this._isOpening = true;
@@ -446,7 +459,6 @@ export class UIManager {
                     break;
                 }
             }
-
         } else {
             uiInfo = this._uiStack.pop();
         }
@@ -476,7 +488,7 @@ export class UIManager {
         let close = () => {
             this._isClosing = false;
             // 显示之前的界面
-            if (preUIInfo && preUIInfo.uiView && this.isTopUI(preUIInfo.uiId, preUIInfo.uiOrder)) {
+            if (preUIInfo && preUIInfo.uiView && this.isTopUI(preUIInfo.uiView)) {
                 // 如果之前的界面弹到了最上方（中间有可能打开了其他界面）
                 preUIInfo.uiView.node.active = true
                 // 回调onTop
@@ -489,13 +501,20 @@ export class UIManager {
                 this.uiCloseDelegate(uiId);
             }
             if (uiView!.cache) {
-                this._uiCache[uiId] = uiView!;
-                uiView!.node.removeFromParent();
-                log(`uiView removeFromParent ${uiInfo!.uiId}`);
+                if (this._uiConf[uiId].multiInstance) {
+                    // 多实例ui不做缓存
+                    uiView!.releaseAssets();
+                    uiView!.node.destroy();
+                    log(`uiView destroy ${uiInfo!.uiId}, ${uiInfo!.uiOrder}`);
+                } else {
+                    this._uiCache[uiId] = uiView!;
+                    uiView!.node.removeFromParent();
+                    log(`uiView removeFromParent ${uiInfo!.uiId}, ${uiInfo!.uiOrder}`);
+                }
             } else {
                 uiView!.releaseAssets();
                 uiView!.node.destroy();
-                log(`uiView destroy ${uiInfo!.uiId}`);
+                log(`uiView destroy ${uiInfo!.uiId}, ${uiInfo!.uiOrder}`);
             }
             this._autoExecNextUI();
         }
@@ -527,7 +546,7 @@ export class UIManager {
 
     /**
      * 关闭界面，一直关闭到顶部为uiId的界面，为避免循环打开UI导致UI栈溢出
-     * @param uiId 要关闭到的uiId（关闭其顶部的ui）
+     * @param uiId 要关闭到的uiId
      * @param bOpenSelf 是否重新打开自己
      * @param uiArgs 打开的参数
      * 
@@ -563,8 +582,14 @@ export class UIManager {
             if (uiView) {
                 uiView.onClose()
                 if (uiView.cache) {
-                    this._uiCache[uiId] = uiView;
-                    uiView.node.removeFromParent();
+                    if (this._uiConf[uiId].multiInstance) {
+                        // 多实例ui不做缓存
+                        uiView.releaseAssets();
+                        uiView.node.destroy();
+                    } else {
+                        this._uiCache[uiId] = uiView;
+                        uiView.node.removeFromParent();
+                    }
                 } else {
                     uiView.releaseAssets();
                     uiView.node.destroy();
@@ -595,18 +620,22 @@ export class UIManager {
     /******************** UI的便捷接口 *******************/
     /**
      * 是否栈顶ui
-     * @param uiId 界面id
-     * @param uiOrder 界面索引，缺省则只匹配uiId
+     * @param uiOrId UIView对象或uiId
      * @returns 
      */
-    public isTopUI(uiId: number, uiOrder?: number): boolean {
+    public isTopUI(uiOrId: number | UIView): boolean {
         if (this._uiStack.length == 0) {
             return false;
         }
 
         let uiInfo = this._uiStack[this._uiStack.length - 1];
-        let bIs = (uiInfo.uiId == uiId);
-        if (undefined != uiOrder) bIs = bIs && (uiInfo.uiOrder == uiOrder);
+        let bIs = false;
+        if ('number' == typeof uiOrId) {
+            bIs = (uiOrId == uiInfo.uiId);
+        } else {
+            bIs = (uiOrId == uiInfo.uiView)
+        }
+
         return bIs;
     }
 
@@ -650,28 +679,33 @@ export class UIManager {
 
     /**
      * 获取ui栈指定ui所处位置索引数组
-     * @param uiId 界面id
-     * @param uiOrder 界面索引，缺省则只匹配uiId
+     * @param uiOrId UIView对象或uiId
      * @returns 
      */
-    public getUIIndex(uiId: number, uiOrder?: number): number[] {
+    public getUIIndex(uiOrId: number | UIView): number[] {
         let idxList: number[] = [];
-        let uiConf = this._uiConf[uiId];
-        let multiInstance = uiConf && uiConf.multiInstance;
-        for (let index = 0; index < this._uiStack.length; index++) {
-            const element = this._uiStack[index];
-            if (uiId == element.uiId) {
-                if (undefined != uiOrder) {
-                    if (uiOrder == element.uiOrder) {
-                        idxList.push(index);
-                        break;
-                    }
-                } else {
+        if ('number' == typeof uiOrId) {
+            // 模糊匹配uiId
+            let uiConf = this._uiConf[uiOrId];
+            let multiInstance = uiConf && uiConf.multiInstance;
+            for (let index = 0; index < this._uiStack.length; index++) {
+                const element = this._uiStack[index];
+                if (uiOrId == element.uiId) {
                     idxList.push(index);
                     if (!multiInstance) break;  // 优化，减少计算量
                 }
             }
+        } else {
+            // 精确匹配UIView
+            for (let index = 0; index < this._uiStack.length; index++) {
+                const element = this._uiStack[index];
+                if (uiOrId == element.uiView) {
+                    idxList.push(index);
+                    break;
+                }
+            }
         }
+
         return idxList;
     }
 

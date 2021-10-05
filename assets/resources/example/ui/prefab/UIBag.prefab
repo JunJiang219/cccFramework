@@ -1000,8 +1000,8 @@
       "__id__": 46
     },
     "quickClose": true,
-    "cache": false,
-    "showType": 2,
+    "cache": true,
+    "showType": 1,
     "_id": ""
   },
   {
