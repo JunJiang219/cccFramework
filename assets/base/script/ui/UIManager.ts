@@ -43,9 +43,9 @@ export interface IUIConf {
     multiInstance?: boolean;        // 是否允许生成多个实例(默认否)，多实例ui暂时不做缓存
 }
 
-export type UIOpenBeforeCallback = (uiId: number, preUIId: number) => void;
-export type UIOpenCallback = (uiId: number, preUIId: number) => void;
-export type UICloseCallback = (uiId: number) => void;
+export type UIOpenBeforeCallback = (uiView: UIView, preUIView: UIView) => void;
+export type UIOpenCallback = (uiView: UIView, preUIView: UIView) => void;
+export type UICloseCallback = (uiView: UIView) => void;
 
 /** --------------- ui配置示例 ----------------- */
 // export enum UIID {
@@ -324,26 +324,26 @@ export class UIManager {
         this._updateUI();
 
         // 从哪个界面打开的
-        let fromUIID = 0;
+        let fromUIView: UIView = null!;
         if (this._uiStack.length > 1) {
             if (this.isTopUI(uiView)) {
-                fromUIID = this._uiStack[this._uiStack.length - 2].uiId;
+                fromUIView = this._uiStack[this._uiStack.length - 2].uiView!;
             } else {
-                fromUIID = this._uiStack[this._uiStack.length - 1].uiId;
+                fromUIView = this._uiStack[this._uiStack.length - 1].uiView!;
             }
         }
 
         // 打开界面之前回调
         if (this.uiOpenBeforeDelegate) {
-            this.uiOpenBeforeDelegate(uiId, fromUIID);
+            this.uiOpenBeforeDelegate(uiView, fromUIView);
         }
 
         // 执行onOpen回调
-        uiView.onOpen(fromUIID, ...uiArgs);
+        uiView.onOpen(fromUIView, ...uiArgs);
         this._autoExecAnimation(uiView, "uiOpen", () => {
             uiView.onOpenAniOver();
             if (this.uiOpenDelegate) {
-                this.uiOpenDelegate(uiId, fromUIID);
+                this.uiOpenDelegate(uiView, fromUIView);
             }
         });
     }
@@ -492,13 +492,13 @@ export class UIManager {
                 // 如果之前的界面弹到了最上方（中间有可能打开了其他界面）
                 preUIInfo.uiView.node.active = true
                 // 回调onTop
-                preUIInfo.uiView.onTop(uiId, uiView!.onClose());
+                preUIInfo.uiView.onTop(uiView!, uiView!.onClose());
             } else {
                 uiView!.onClose();
             }
 
             if (this.uiCloseDelegate) {
-                this.uiCloseDelegate(uiId);
+                this.uiCloseDelegate(uiView!);
             }
             if (uiView!.cache) {
                 if (this._uiConf[uiId].multiInstance) {
@@ -576,7 +576,7 @@ export class UIManager {
             }
 
             if (this.uiCloseDelegate) {
-                this.uiCloseDelegate(uiId);
+                this.uiCloseDelegate(uiView!);
             }
 
             if (uiView) {

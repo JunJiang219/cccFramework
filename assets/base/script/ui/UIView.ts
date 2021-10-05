@@ -69,7 +69,7 @@ export class UIView extends ResKeeper {
      * @param fromUI 从哪个UI打开的
      * @param args 可变参数
      */
-    public onOpen(fromUI: number, ...args: any[]): void {
+    public onOpen(fromUI: UIView, ...args: any[]): void {
 
     }
 
@@ -89,10 +89,10 @@ export class UIView extends ResKeeper {
 
     /**
      * 当界面被置顶时回调，Open时并不会回调该函数
-     * @param preID 前一个ui
+     * @param preUI 前一个ui
      * @param args 可变参数，
      */
-    public onTop(preID: number, ...args: any[]): void {
+    public onTop(preUI: UIView, ...args: any[]): void {
 
     }
 }
