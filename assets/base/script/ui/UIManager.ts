@@ -350,6 +350,12 @@ export class UIManager {
 
     /** 打开界面并添加到界面栈中 */
     public open(uiId: number, progressCallback: ProgressCallback | null = null, ...uiArgs: any[]): void {
+        let uiConf = this._uiConf[uiId];
+        if (!uiConf) {
+            log(`open ${uiId} failed! not configured`);
+            return;
+        }
+
         let uiInfo: IUIInfo = {
             uiId: uiId,
             uiOrder: 0,
@@ -361,12 +367,6 @@ export class UIManager {
         if (this._isOpening || this._isClosing) {
             // 插入待打开队列
             this._uiOpenQueue.push(uiInfo);
-            return;
-        }
-
-        let uiConf = this._uiConf[uiId];
-        if (!uiConf) {
-            log(`open ${uiId} failed! not configured`);
             return;
         }
 
