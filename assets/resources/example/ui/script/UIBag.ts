@@ -1,8 +1,7 @@
 
-import { find, UITransform, _decorator } from 'cc';
+import { _decorator } from 'cc';
 import { sceneMgr } from '../../../../base/script/scene/SceneManager';
 import { UIView } from '../../../../base/script/ui/UIView';
-import { UIID } from './ExUI';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIBag')
@@ -12,9 +11,13 @@ export class UIBag extends UIView {
         sceneMgr.getUIManager()?.close(this);
     }
 
-    public onOpen(fromUI: number, ...args: any[]): void {
+    public onOpen(fromUI: UIView, ...args: any[]): void {
         console.log('onOpen -----');
-        console.log(fromUI);
+        if (fromUI) {
+            console.log(fromUI.uiId);
+        } else {
+            console.log(0);
+        }
         console.log(args);
     }
 }

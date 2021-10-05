@@ -11,7 +11,7 @@ export enum UIID {
 
 const UIConf: { [uiId: number]: IUIConf } = {
     [UIID.Bag]: { prefab: 'example/ui/prefab/UIBag', preventTouch: true, multiInstance: true },
-    [UIID.Head]: { prefab: 'example/ui/prefab/UIHead', preventTouch: true },
+    [UIID.Head]: { prefab: 'example/ui/prefab/UIHead', preventTouch: false, multiInstance: true },
 }
 
 @ccclass('ExUI')
@@ -24,14 +24,18 @@ export class ExUI extends Component {
             let uiMgr = sceneMgr.getUIManager();
             if (uiMgr) {
                 uiMgr.initUIConf(UIConf);
-                uiMgr.open(UIID.Bag, null, 5);
-                // uiMgr.open(UIID.Head, null, 8);
+                // uiMgr.open(UIID.Bag, null, 5);
+                uiMgr.open(UIID.Head, null, 8);
             }
         });
     }
 
     public onBtnChangeScene() {
         director.loadScene('ex_cut');
+        // let uiMgr = sceneMgr.getUIManager();
+        // if (uiMgr) {
+        //     uiMgr.closeByID(UIID.Head);
+        // }
     }
 
     onDestroy() {

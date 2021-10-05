@@ -522,6 +522,52 @@ export class UIManager {
         this._autoExecAnimation(uiView, "uiClose", close);
     }
 
+    /**
+     * 通过id关闭界面
+     * @param uiId 界面id
+     */
+    public closeByID(uiId: number) {
+        let idxList = this.getUIIndex(uiId);
+        let idxLen = idxList.length;
+        if (idxLen <= 0) return;
+        let lastUIView = this._uiStack[idxList[idxLen - 1]].uiView;
+
+        // 静默关闭除最后一个界面外的界面
+        if (idxLen > 1) {
+            let remainList: IUIInfo[] = [];
+            let closeList: IUIInfo[] = [];
+            let closeCnt: number = 0;
+            let uiInfo: IUIInfo = null!;
+            for (let i = 0; i < this._uiStack.length; ++i) {
+                uiInfo = this._uiStack[i];
+                if (uiId == uiInfo.uiId && closeCnt <= idxLen - 2) {
+                    closeList.push(uiInfo);
+                    ++closeCnt;
+                } else {
+                    remainList.push(uiInfo);
+                }
+            }
+            this._uiStack = remainList; // 重新赋值
+
+            for (let i = 0; i < closeList.length; ++i) {
+                let uiInfo = closeList[i];
+                uiInfo.isClose = true;
+                if (uiInfo.preventNode) {
+                    uiInfo.preventNode.destroy();
+                    uiInfo.preventNode = null;
+                }
+                if (uiInfo.uiView) {
+                    uiInfo.uiView.onClose();
+                    uiInfo.uiView.releaseAssets();
+                    uiInfo.uiView.node.destroy();
+                }
+            }
+        }
+
+        // 关闭最后一个ui
+        this.close(lastUIView!);
+    }
+
     /** 关闭所有界面 */
     public closeAll() {
         // 不播放动画，也不清理缓存
