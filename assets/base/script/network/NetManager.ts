@@ -39,7 +39,7 @@ export class NetManager {
     // 调用Node发送
     public send(buf: NetData, force: boolean = false, channelId: number = 0): number {
         let node = this._channels[channelId];
-        if(node) {
+        if (node) {
             return node!.send(buf, force);
         }
         return -1;
@@ -48,7 +48,7 @@ export class NetManager {
     // 发起请求，并在在结果返回时调用指定好的回调函数
     public request(buf: NetData, rspCmd: number, rspObject: CallbackObject, showTips: boolean = true, force: boolean = false, channelId: number = 0) {
         let node = this._channels[channelId];
-        if(node) {
+        if (node) {
             node.request(buf, rspCmd, rspObject, showTips, force);
         }
     }
@@ -56,7 +56,7 @@ export class NetManager {
     // 同request，但在request之前会先判断队列中是否已有rspCmd，如有重复的则直接返回
     public requestUnique(buf: NetData, rspCmd: number, rspObject: CallbackObject, showTips: boolean = true, force: boolean = false, channelId: number = 0): boolean {
         let node = this._channels[channelId];
-        if(node) {
+        if (node) {
             return node.requestUnique(buf, rspCmd, rspObject, showTips, force);
         }
         return false;
@@ -69,3 +69,5 @@ export class NetManager {
         }
     }
 }
+
+export let netMgr = NetManager.getInstance();

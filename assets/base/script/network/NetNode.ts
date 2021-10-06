@@ -11,7 +11,7 @@ import { ISocket, INetworkTips, IProtocolHelper, RequestObject, CallbackObject, 
 */
 
 type ExecuterFunc = (callback: CallbackObject, buffer: NetData) => void;
-type CheckFunc = (checkedFunc : VoidFunc ) => void;
+type CheckFunc = (checkedFunc: VoidFunc) => void;
 type VoidFunc = () => void;
 type BoolFunc = () => boolean;
 
@@ -54,12 +54,12 @@ export class NetNode {
     protected _reconnectTimer: any = null;                                  // 重连定时器
     protected _heartTime: number = 10000;                                   // 心跳间隔
     protected _receiveTime: number = 6000000;                               // 多久没收到数据断开
-    protected _reconnetTimeOut: number = 8000000;                           // 重连间隔
+    protected _reconnectTimeOut: number = 8000000;                           // 重连间隔
     protected _requests: RequestObject[] = Array<RequestObject>();          // 请求列表
     protected _listener: { [key: number]: CallbackObject[] | null } = {}           // 监听者列表
 
     /********************** 网络相关处理 *********************/
-    public init(socket: ISocket, protocol: IProtocolHelper, networkTips: any = null, execFunc : ExecuterFunc | null = null) {
+    public init(socket: ISocket, protocol: IProtocolHelper, networkTips: any = null, execFunc: ExecuterFunc | null = null) {
         console.log(`NetNode init socket`);
         this._socket = socket;
         this._protocolHelper = protocol;
@@ -112,7 +112,7 @@ export class NetNode {
     }
 
     // 网络连接成功
-    protected onConnected(event : any) {
+    protected onConnected(event: any) {
         console.log("NetNode onConnected!")
         this._isSocketOpen = true;
         // 如果设置了鉴权回调，在连接完成后进入鉴权阶段，等待鉴权结束
@@ -151,7 +151,7 @@ export class NetNode {
     }
 
     // 接收到一个完整的消息包
-    protected onMessage(msg : any): void {
+    protected onMessage(msg: any): void {
         // console.log(`NetNode onMessage status = ` + this._state);
         // 进行头部的校验（实际包长与头部长度是否匹配）
         if (!this._protocolHelper!.checkPackage(msg)) {
@@ -161,7 +161,7 @@ export class NetNode {
         // 接受到数据，重新定时收数据计时器
         this.resetReceiveMsgTimer();
         // 重置心跳包发送器
-        this.resetHearbeatTimer();
+        this.resetHeartbeatTimer();
         // 触发消息执行
         let rspCmd = this._protocolHelper!.getPackageId(msg);
         console.log(`NetNode onMessage rspCmd = ` + rspCmd);
@@ -170,13 +170,13 @@ export class NetNode {
             for (let reqIdx in this._requests) {
                 let req = this._requests[reqIdx];
                 if (req.rspCmd == rspCmd && req.rspObject) {
-                    console.log(`NetNode execute request rspcmd ${rspCmd}`);
+                    console.log(`NetNode execute request rspCmd ${rspCmd}`);
                     this._callbackExecuter!(req.rspObject, msg);
                     this._requests.splice(parseInt(reqIdx), 1);
                     break;
                 }
             }
-            console.log(`NetNode still has ${this._requests.length} request watting`);
+            console.log(`NetNode still has ${this._requests.length} request waiting`);
             if (this._requests.length == 0) {
                 this.updateNetTips(NetTipsType.Requesting, false);
             }
@@ -191,11 +191,11 @@ export class NetNode {
         }
     }
 
-    protected onError(event : any) {
+    protected onError(event: any) {
         console.error(event);
     }
 
-    protected onClosed(event : any) {
+    protected onClosed(event: any) {
         this.clearTimer();
 
         // 执行断线回调，返回false表示不进行重连
@@ -214,7 +214,7 @@ export class NetNode {
                 if (this._autoReconnect > 0) {
                     this._autoReconnect -= 1;
                 }
-            }, this._reconnetTimeOut);
+            }, this._reconnectTimeOut);
         } else {
             this._state = NetNodeState.Closed;
         }
@@ -292,18 +292,18 @@ export class NetNode {
     }
 
     /********************** 回调相关处理 *********************/
-    public setResponeHandler(cmd: number, callback: NetCallFunc, target?: any): boolean {
+    public setResponseHandler(cmd: number, callback: NetCallFunc, target?: any): boolean {
         if (callback == null) {
-            console.error(`NetNode setResponeHandler error ${cmd}`);
+            console.error(`NetNode setResponseHandler error ${cmd}`);
             return false;
         }
         this._listener[cmd] = [{ target, callback }];
         return true;
     }
 
-    public addResponeHandler(cmd: number, callback: NetCallFunc, target?: any): boolean {
+    public addResponseHandler(cmd: number, callback: NetCallFunc, target?: any): boolean {
         if (callback == null) {
-            console.error(`NetNode addResponeHandler error ${cmd}`);
+            console.error(`NetNode addResponseHandler error ${cmd}`);
             return false;
         }
         let rspObject = { target, callback };
@@ -318,7 +318,7 @@ export class NetNode {
         return true;
     }
 
-    public removeResponeHandler(cmd: number, callback: NetCallFunc, target?: any) {
+    public removeResponseHandler(cmd: number, callback: NetCallFunc, target?: any) {
         if (null != this._listener[cmd] && callback != null) {
             let index = this.getNetListenersIndex(cmd, { target, callback });
             if (-1 != index) {
@@ -355,19 +355,19 @@ export class NetNode {
         }
 
         this._receiveMsgTimer = setTimeout(() => {
-            console.warn("NetNode recvieMsgTimer close socket!");
+            console.warn("NetNode receiveMsgTimer close socket!");
             this._socket!.close();
         }, this._receiveTime);
     }
 
-    protected resetHearbeatTimer() {
+    protected resetHeartbeatTimer() {
         if (this._keepAliveTimer !== null) {
             clearTimeout(this._keepAliveTimer);
         }
 
         this._keepAliveTimer = setTimeout(() => {
-            console.log("NetNode keepAliveTimer send Hearbeat")
-            this.send(this._protocolHelper!.getHearbeat());
+            console.log("NetNode keepAliveTimer send Heartbeat")
+            this.send(this._protocolHelper!.getHeartbeat());
         }, this._heartTime);
     }
 

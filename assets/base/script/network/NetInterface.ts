@@ -23,8 +23,8 @@ export interface RequestObject {
 
 // 协议辅助接口
 export interface IProtocolHelper {
-    getHeadlen(): number;                   // 返回包头长度
-    getHearbeat(): NetData;                 // 返回一个心跳包
+    getHeadLen(): number;                   // 返回包头长度
+    getHeartbeat(): NetData;                 // 返回一个心跳包
     getPackageLen(msg: NetData): number;    // 返回整个包的长度
     checkPackage(msg: NetData): boolean;    // 检查包数据是否合法
     getPackageId(msg: NetData): number;     // 返回包的id或协议类型
@@ -32,14 +32,13 @@ export interface IProtocolHelper {
 
 // 默认字符串协议对象
 export class DefStringProtocol implements IProtocolHelper {
-    getHeadlen(): number {
+    getHeadLen(): number {
         return 0;
     }
-    getHearbeat(): NetData {
+    getHeartbeat(): NetData {
         return "";
     }
-    getPackageLen(msg: NetData): number
-    {
+    getPackageLen(msg: NetData): number {
         return msg.toString().length;
     }
     checkPackage(msg: NetData): boolean {
@@ -59,7 +58,7 @@ export interface ISocket {
     onMessage: MessageFunc | null;          // 消息回调
     onError: SocketFunc | null;             // 错误回调
     onClosed: SocketFunc | null;            // 关闭回调
-    
+
     connect(options: any): any;                     // 连接接口
     send(buffer: NetData): number;                  // 数据发送接口
     close(code?: number, reason?: string): void;    // 关闭接口
