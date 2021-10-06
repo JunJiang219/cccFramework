@@ -3,62 +3,50 @@
  */
 
 import { _decorator } from 'cc';
-import { ResKeeper } from '../res/ResKeeper';
+import { sceneMgr } from '../scene/SceneManager';
+import { UIView } from './UIView';
 const { ccclass, property } = _decorator;
 
-// 模态框回调
+// 模态提示框回调
 export type DialogCallback = { callback: Function, target?: any };
 
-// 模态框参数
+// 模态提示框参数
 export interface IDialogArgs {
-    content: string,
-    okCallback?: DialogCallback,
-    noCallback?: DialogCallback,
+    content: string,                // 提示内容
+    okCallback?: DialogCallback,    // 确认回调
+    noCallback?: DialogCallback,    // 取消回调
+    extParams?: any,                // 附加参数
 }
 
 @ccclass('DialogBase')
-export class DialogBase extends ResKeeper {
-
-    /** 快速关闭 */
-    @property
-    quickClose: boolean = false;
+export class DialogBase extends UIView {
 
     // 对话框参数
     protected _uiArgs: IDialogArgs | null = null;
-    // 额外参数
-    protected _exArgs: any[] = null!;
-
-    // 界面索引
-    private _uiIndex: number = 0;
-    public get uiIndex() { return this._uiIndex; }
-    /**  静态变量，用于区分相同界面的不同实例 */
-    private static _uiCnt: number = 0;
 
     /********************** UI的回调 ***********************/
     /**
      * 当界面被创建时回调，生命周期内只调用一次
-     * @param args 可变参数
+     * @override
+     * @param uiId 界面id
+     * @param args 模态提示框参数
      */
-    public init(...args: any[]): void {
-        this._uiIndex = ++DialogBase._uiCnt;
-        this._exArgs = args;
+    public init(uiId: number, args: IDialogArgs): void {
+        super.init(uiId, args);
+        this._uiArgs = args;
     }
 
     /**
      * 当界面被打开时回调，每次调用Open时回调
-     * @param uiArgs
-     * @param args 可变参数
+     * @override
+     * @param fromUI 从哪个UI打开的
+     * @param args 模态提示框参数
      */
-    public onOpen(uiArgs: IDialogArgs, ...args: any[]) {
-        this._uiArgs = uiArgs;
-        this._exArgs = args;
+    public onOpen(fromUI: UIView, args: IDialogArgs) {
+        super.onOpen(fromUI, args);
+        this._uiArgs = args;
     }
-
-    /**
-     * 每次界面Open动画播放完毕时回调
-     */
-    public onOpenAniOver(): void {
-    }
+    /********************** UI的回调 ***********************/
 
     // 确认处理
     public okHandler() {
@@ -67,11 +55,14 @@ export class DialogBase extends ResKeeper {
             let callback = okCallback.callback;
             let target = okCallback.target;
             if (target) {
-                callback.call(target, ...this._exArgs);
+                callback.call(target, this._uiArgs?.extParams);
             } else {
-                callback(...this._exArgs);
+                callback(this._uiArgs?.extParams);
             }
         }
+
+        let uiMgr = sceneMgr.getUIManager();
+        uiMgr?.close(this);
     }
 
     // 取消处理
@@ -81,11 +72,13 @@ export class DialogBase extends ResKeeper {
             let callback = noCallback.callback;
             let target = noCallback.target;
             if (target) {
-                callback.call(target, ...this._exArgs);
+                callback.call(target, this._uiArgs?.extParams);
             } else {
-                callback(...this._exArgs);
+                callback(this._uiArgs?.extParams);
             }
         }
+
+        let uiMgr = sceneMgr.getUIManager();
+        uiMgr?.close(this);
     }
-    /********************** UI的回调 ***********************/
 }
