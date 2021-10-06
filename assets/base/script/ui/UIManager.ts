@@ -24,7 +24,7 @@ import { UIShowTypes, UIView } from "./UIView";
 /** UI栈结构体 */
 export interface IUIInfo {
     uiId: number;                               // uiView.uiId
-    uiOrder: number;                            // uiView.uiOrder
+    uiIndex: number;                            // uiView.uiIndex
     uiView: UIView | null;                      // ui对象
     progressCb: ProgressCallback | null;        // 进度回调
     uiArgs: any[];                              // ui初始化参数
@@ -286,7 +286,7 @@ export class UIManager {
             return;
         }
         // 激活界面
-        uiInfo.uiOrder = uiView.uiOrder;
+        uiInfo.uiIndex = uiView.uiIndex;
         uiInfo.uiView = uiView;
         uiView.node.active = true;
         let uiCom = uiView.getComponent(UITransform);
@@ -358,7 +358,7 @@ export class UIManager {
 
         let uiInfo: IUIInfo = {
             uiId: uiId,
-            uiOrder: 0,
+            uiIndex: 0,
             uiArgs: uiArgs,
             uiView: null,
             progressCb: progressCallback
@@ -505,16 +505,16 @@ export class UIManager {
                     // 多实例ui不做缓存
                     uiView!.releaseAssets();
                     uiView!.node.destroy();
-                    log(`uiView destroy ${uiInfo!.uiId}, ${uiInfo!.uiOrder}`);
+                    log(`uiView destroy ${uiInfo!.uiId}, ${uiInfo!.uiIndex}`);
                 } else {
                     this._uiCache[uiId] = uiView!;
                     uiView!.node.removeFromParent();
-                    log(`uiView removeFromParent ${uiInfo!.uiId}, ${uiInfo!.uiOrder}`);
+                    log(`uiView removeFromParent ${uiInfo!.uiId}, ${uiInfo!.uiIndex}`);
                 }
             } else {
                 uiView!.releaseAssets();
                 uiView!.node.destroy();
-                log(`uiView destroy ${uiInfo!.uiId}, ${uiInfo!.uiOrder}`);
+                log(`uiView destroy ${uiInfo!.uiId}, ${uiInfo!.uiIndex}`);
             }
             this._autoExecNextUI();
         }
@@ -688,18 +688,18 @@ export class UIManager {
     /**
      * 获取uiView对象数组
      * @param uiId 界面id
-     * @param uiOrder 界面索引，缺省则只匹配uiId
+     * @param uiIndex 界面索引，缺省则只匹配uiId
      * @returns 
      */
-    public getUI(uiId: number, uiOrder?: number): UIView[] {
+    public getUI(uiId: number, uiIndex?: number): UIView[] {
         let uiList: UIView[] = [];
         let uiConf = this._uiConf[uiId];
         let multiInstance = uiConf && uiConf.multiInstance;
         for (let index = 0; index < this._uiStack.length; index++) {
             const element = this._uiStack[index];
             if (uiId == element.uiId) {
-                if (undefined != uiOrder) {
-                    if (uiOrder == element.uiOrder) {
+                if (undefined != uiIndex) {
+                    if (uiIndex == element.uiIndex) {
                         uiList.push(element.uiView!);
                         break;
                     }
