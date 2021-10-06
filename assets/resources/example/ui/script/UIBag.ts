@@ -20,4 +20,8 @@ export class UIBag extends UIView {
         }
         console.log(args);
     }
+
+    onDestroy() {
+        super.onDestroy();
+    }
 }

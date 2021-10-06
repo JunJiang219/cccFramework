@@ -573,14 +573,14 @@ export class UIManager {
         // 不播放动画，也不清理缓存
         for (const uiInfo of this._uiStack) {
             uiInfo.isClose = true;
-            if (uiInfo.preventNode) {
-                uiInfo.preventNode.destroy();
+            if (isValid(uiInfo.preventNode)) {
+                uiInfo.preventNode!.destroy();
                 uiInfo.preventNode = null;
             }
-            if (uiInfo.uiView) {
-                uiInfo.uiView.onClose();
-                uiInfo.uiView.releaseAssets();
-                uiInfo.uiView.node.destroy();
+            if (isValid(uiInfo.uiView)) {
+                uiInfo.uiView!.onClose();
+                uiInfo.uiView!.releaseAssets();
+                uiInfo.uiView!.node.destroy();
             }
         }
         this._uiOpenQueue = [];

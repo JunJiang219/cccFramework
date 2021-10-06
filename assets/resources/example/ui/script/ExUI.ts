@@ -11,7 +11,7 @@ export enum UIID {
 
 const UIConf: { [uiId: number]: IUIConf } = {
     [UIID.Bag]: { prefab: 'example/ui/prefab/UIBag', preventTouch: true, multiInstance: true },
-    [UIID.Head]: { prefab: 'example/ui/prefab/UIHead', preventTouch: false, multiInstance: true },
+    [UIID.Head]: { prefab: 'example/ui/prefab/UIHead', preventTouch: false },
 }
 
 @ccclass('ExUI')
