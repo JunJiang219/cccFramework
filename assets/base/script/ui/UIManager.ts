@@ -39,7 +39,7 @@ export interface IUIConf {
     bundleName?: string;            // bundle名，不配则取默认值 'resources'
     preventTouch?: boolean;         // 是否开启触摸拦截，默认关闭
     preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 150)，最后一位表示透明度。null表示不设颜色
-    zOrder?: number;                // 指定层级(未指定ui从1开始递增；指定ui设为该值，如有多实例，在此基础上递增)
+    zOrder?: number;                // 指定层级(未指定ui从1开始递增；指定ui设为 zOrder + n（n为实例数量）)
     multiInstance?: boolean;        // 是否允许生成多个实例(默认否)，多实例ui暂时不做缓存
 }
 
@@ -69,8 +69,8 @@ export class UIManager {
     // 场景uuid
     private _sceneUUID: string = '';
     public get sceneUUID() { return this._sceneUUID; }
-    /** 背景UI（有若干层UI是作为背景UI，而不受切换等影响）*/
-    private _backGroundUI = 0;
+    /** 背景UI数量（有若干层UI是作为背景UI，而不受切换等影响）*/
+    private _backGroundUICnt = 0;
     /** 是否正在关闭UI */
     private _isClosing = false;
     /** 是否正在打开UI */
@@ -93,7 +93,7 @@ export class UIManager {
 
     // 设置背景UI层数
     public setBackGroundUICnt(cnt: number) {
-        this._backGroundUI = cnt;
+        this._backGroundUICnt = cnt;
     }
 
     /** UI打开前回调 */
@@ -133,7 +133,7 @@ export class UIManager {
 
         let uiCom = node.addComponent(UITransform);
         uiCom.setContentSize(view.getVisibleSize());
-        if (undefined === color) color = new Color(0, 0, 0, 150);   // 取默认值
+        if (undefined == color) color = new Color(0, 0, 0, 150);   // 取默认值
         if (color) {
             let sprComp = node.addComponent(Sprite);
             sprComp.type = Sprite.Type.SIMPLE;
@@ -201,12 +201,12 @@ export class UIManager {
             if (UIShowTypes.UIFullScreen == mode) {
                 break;
             } else if (UIShowTypes.UISingle == mode) {
-                for (let i = 0; i < this._backGroundUI; ++i) {
+                for (let i = 0; i < this._backGroundUICnt; ++i) {
                     if (this._uiStack[i]) {
                         this._uiStack[i].uiView!.node.active = true;
                     }
                 }
-                hideIndex = this._backGroundUI;
+                hideIndex = this._backGroundUICnt;
                 break;
             }
         }
@@ -381,18 +381,18 @@ export class UIManager {
         }
 
         // 设置UI的zOrder
-        if (undefined === uiConf.zOrder) {
-            // 自动生成zOrder
+        if (undefined == uiConf.zOrder) {
+            // 自动生成zOrder(>=1)
             let autoZCnt = 0, tmpId = 0;
             for (let i = 0; i < this._uiStack.length; ++i) {
                 tmpId = this._uiStack[i].uiId;
-                if (undefined === this._uiConf[tmpId].zOrder) ++autoZCnt;
+                if (undefined == this._uiConf[tmpId].zOrder) ++autoZCnt;
             }
             uiInfo.zOrder = autoZCnt + 1;
         } else {
-            // 主动指定zOrder
+            // 主动指定zOrder(zOrder + n)
             let cnt = this.getUICnt(uiId);
-            uiInfo.zOrder = uiConf.zOrder! + cnt;
+            uiInfo.zOrder = uiConf.zOrder! + 1 + cnt;
         }
         this._uiStack.push(uiInfo);
         this._uiStack.sort(this._sortUIStack.bind(this));
@@ -453,7 +453,7 @@ export class UIManager {
         if (closeUI) {
             for (let index = this._uiStack.length - 1; index >= 0; index--) {
                 let ui = this._uiStack[index];
-                if (ui.uiView === closeUI) {
+                if (ui.uiView == closeUI) {
                     uiInfo = ui;
                     this._uiStack.splice(index, 1);
                     break;
@@ -463,7 +463,7 @@ export class UIManager {
             uiInfo = this._uiStack.pop();
         }
         // 找不到这个UI
-        if (uiInfo === undefined) {
+        if (uiInfo == undefined) {
             return;
         }
 
@@ -532,7 +532,7 @@ export class UIManager {
         if (idxLen <= 0) return;
         let lastUIView = this._uiStack[idxList[idxLen - 1]].uiView;
 
-        // 静默关闭除最后一个界面外的界面
+        // 如果有多个实例，静默关闭除最后一个界面外的界面
         if (idxLen > 1) {
             let remainList: IUIInfo[] = [];
             let closeList: IUIInfo[] = [];
@@ -540,7 +540,7 @@ export class UIManager {
             let uiInfo: IUIInfo = null!;
             for (let i = 0; i < this._uiStack.length; ++i) {
                 uiInfo = this._uiStack[i];
-                if (uiId == uiInfo.uiId && closeCnt <= idxLen - 2) {
+                if (uiId == uiInfo.uiId && closeCnt < idxLen - 1) {
                     closeList.push(uiInfo);
                     ++closeCnt;
                 } else {
@@ -564,7 +564,7 @@ export class UIManager {
             }
         }
 
-        // 关闭最后一个ui
+        // 关闭最后一个ui实例（可能有动画表现）
         this.close(lastUIView!);
     }
 

@@ -11,7 +11,7 @@ export enum BaseLayer {
     Toast = 500,        // 非模态提示(500-599)
 }
 
-// 基础消息定义
-export enum BaseMsg {
-    MSG_BEFORE_SCENE_LAUNCH = 'MSG_BEFORE_SCENE_LAUNCH',
+// 基础事件定义
+export enum BaseEvent {
+    EVENT_BEFORE_SCENE_LAUNCH = 'EVENT_BEFORE_SCENE_LAUNCH',
 }
