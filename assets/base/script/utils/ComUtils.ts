@@ -2,7 +2,7 @@
  * 通用工具类
  */
 
-export class ComUtil {
+export class ComUtils {
 
     // 检测有效url
     public static checkURL(url: string) {
@@ -21,7 +21,7 @@ export class ComUtil {
         //先去除全部空格
         if (!url) url = window.location.href;
         url = url.replace(/\s*/g, "");
-        let params: {[key: string]: string} = {};
+        let params: { [key: string]: string } = {};
         let idx = url.indexOf("?");
         if (idx != -1) {
             let sub_str = url.substr(idx + 1);
@@ -176,7 +176,7 @@ export class ComUtil {
         let absV: number = Math.abs(numKMB);
         if (absV < 1e3) {
             // do nothing
-            return ComUtil.formatNum(numKMB, n, 1);
+            return ComUtils.formatNum(numKMB, n, 1);
         } else if (absV < 1e6) {
             numKMB /= 1e3;
             kmb = "K";
@@ -188,32 +188,32 @@ export class ComUtil {
             kmb = "B";
         }
 
-        let retStr = ComUtil.formatNum(numKMB, n, 1) + kmb;
+        let retStr = ComUtils.formatNum(numKMB, n, 1) + kmb;
         return retStr;
     }
 
     // 字符串驼峰化
     public static camelize(label: string) {
         if (label.length === 0)
-          return label;
-      
+            return label;
+
         var n, result, words = label.split(/[_-]/);
-      
+
         // single word with first character already lowercase, return untouched
         if ((words.length === 1) && (words[0][0].toLowerCase() === words[0][0]))
-          return label;
-      
+            return label;
+
         result = words[0].toLowerCase();
-        for(n = 1 ; n < words.length ; n++) {
-          result = result + words[n].charAt(0).toUpperCase() + words[n].substring(1).toLowerCase();
+        for (n = 1; n < words.length; n++) {
+            result = result + words[n].charAt(0).toUpperCase() + words[n].substring(1).toLowerCase();
         }
-      
+
         return result;
     }
-    
+
     // 字符串驼峰化 + 前缀
     public static camelize_prefix(prefix: string, label: string) {
-        label = ComUtil.camelize(label);
+        label = ComUtils.camelize(label);
         return prefix + label[0].toUpperCase() + label.substring(1);
     }
 }

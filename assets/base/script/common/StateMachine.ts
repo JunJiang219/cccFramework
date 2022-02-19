@@ -12,7 +12,7 @@
 
 import { warn } from "cc";
 import { error } from "cc";
-import { ComUtil } from "../utils/ComUtil";
+import { ComUtils } from "../utils/ComUtils";
 
 // 状态机默认值
 const fsm_defaults = {
@@ -158,9 +158,9 @@ export class StateMachine {
 
     // 添加生命周期名 - 状态相关
     private _addStateLifecycleNames(name: string) {
-        this._lifecycleEvents.onEnter![name] = ComUtil.camelize_prefix('onEnter', name);
-        this._lifecycleEvents.onLeave![name] = ComUtil.camelize_prefix('onLeave', name);
-        this._lifecycleEvents.on![name] = ComUtil.camelize_prefix('on', name);
+        this._lifecycleEvents.onEnter![name] = ComUtils.camelize_prefix('onEnter', name);
+        this._lifecycleEvents.onLeave![name] = ComUtils.camelize_prefix('onLeave', name);
+        this._lifecycleEvents.on![name] = ComUtils.camelize_prefix('on', name);
     }
 
     // 删除生命周期名 - 状态相关
@@ -202,9 +202,9 @@ export class StateMachine {
 
     // 添加生命周期名 - 转换相关
     private _addTransitionLifecycleNames(name: string) {
-        this._lifecycleEvents.onBefore![name] = ComUtil.camelize_prefix('onBefore', name);
-        this._lifecycleEvents.onAfter![name] = ComUtil.camelize_prefix('onAfter', name);
-        this._lifecycleEvents.on![name] = ComUtil.camelize_prefix('on', name);
+        this._lifecycleEvents.onBefore![name] = ComUtils.camelize_prefix('onBefore', name);
+        this._lifecycleEvents.onAfter![name] = ComUtils.camelize_prefix('onAfter', name);
+        this._lifecycleEvents.on![name] = ComUtils.camelize_prefix('on', name);
     }
 
     // 删除生命周期名 - 转换相关

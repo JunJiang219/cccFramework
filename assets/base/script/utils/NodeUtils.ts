@@ -19,7 +19,7 @@ interface IRect {
     height?: number
 }
 
-export class NodeUtil {
+export class NodeUtils {
     /**
      * 获取htmlElement位置信息
      * @param element 
@@ -61,7 +61,7 @@ export class NodeUtil {
         let rect: IRect = {};
         if (sys.isBrowser) {
             let canvas = document.getElementById("GameCanvas");
-            rect = NodeUtil.getHTMLElementPosition(canvas);
+            rect = NodeUtils.getHTMLElementPosition(canvas);
         } else {
             rect = view.getFrameSize();
             rect.left = 0;
@@ -88,7 +88,7 @@ export class NodeUtil {
     public static simulation_click(x: number, y: number, duration?: number) {
         //@ts-ignore
         let inputManager = window._cc ? window._cc.inputManager : cc.internal.inputManager;
-        let result = NodeUtil.convertToHtmlSpaceAR(x, y);
+        let result = NodeUtils.convertToHtmlSpaceAR(x, y);
         let pt = result.pt;
         let rect = result.rect;
 
@@ -110,8 +110,8 @@ export class NodeUtil {
     public static simulation_touchMove(startPos: Vec2, endPos: Vec2, duration?: number) {
         //@ts-ignore
         let inputManager = window._cc ? window._cc.inputManager : internal.inputManager;
-        let resultStart = NodeUtil.convertToHtmlSpaceAR(startPos.x, startPos.y);
-        let resultEnd = NodeUtil.convertToHtmlSpaceAR(endPos.x, endPos.y);
+        let resultStart = NodeUtils.convertToHtmlSpaceAR(startPos.x, startPos.y);
+        let resultEnd = NodeUtils.convertToHtmlSpaceAR(endPos.x, endPos.y);
         let startPt = resultStart.pt;
         let startRect = resultStart.rect;
         let endPt = resultEnd.pt;
@@ -138,7 +138,7 @@ export class NodeUtil {
         log('自动节点 :', JSON.stringify(node.position));
         let wp = node.parent?.getComponent(UITransform)?.convertToWorldSpaceAR(node.position);
         log('世界节点 :', JSON.stringify(wp));
-        NodeUtil.simulation_click(wp!.x, wp!.y, duration);
+        NodeUtils.simulation_click(wp!.x, wp!.y, duration);
     }
 
     /**
