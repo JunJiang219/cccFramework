@@ -383,11 +383,7 @@ export class UIManager {
         // 设置UI的zOrder
         if (undefined == uiConf.zOrder) {
             // 自动生成zOrder(>=1)
-            let autoZCnt = 0, tmpId = 0;
-            for (let i = 0; i < this._uiStack.length; ++i) {
-                tmpId = this._uiStack[i].uiId;
-                if (undefined == this._uiConf[tmpId].zOrder) ++autoZCnt;
-            }
+            let autoZCnt = this.getAutoZCnt();
             uiInfo.zOrder = autoZCnt + 1;
         } else {
             // 主动指定zOrder
@@ -768,5 +764,15 @@ export class UIManager {
             }
         }
         return cnt;
+    }
+
+    // 获取ui栈中非人工指定zOrder的界面实例数量
+    public getAutoZCnt() {
+        let autoZCnt = 0, tmpId = 0;
+        for (let i = 0; i < this._uiStack.length; ++i) {
+            tmpId = this._uiStack[i].uiId;
+            if (undefined == this._uiConf[tmpId].zOrder) ++autoZCnt;
+        }
+        return autoZCnt;
     }
 }
