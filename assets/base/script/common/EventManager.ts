@@ -101,7 +101,7 @@ export class EventManager {
     }
 
     raiseEvent(eventName: string, eventData?: any) {
-        console.log(`==================== raiseEvent ${eventName} begin | ${JSON.stringify(eventData)}`);
+        log(`==================== raiseEvent ${eventName} begin | ${JSON.stringify(eventData)}`);
         if (null != this._eventListeners[eventName]) {
             // 将所有回调提取出来，再调用，避免调用回调的时候操作了事件的删除
             let callbackList: CallBackTarget[] = [];
@@ -114,7 +114,7 @@ export class EventManager {
                 iterator.callBack.call(iterator.target, eventName, eventData);
             }
         }
-        console.log(`==================== raiseEvent ${eventName} end`);
+        log(`==================== raiseEvent ${eventName} end`);
     }
 }
 

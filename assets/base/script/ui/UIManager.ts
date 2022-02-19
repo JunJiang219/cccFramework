@@ -39,7 +39,7 @@ export interface IUIConf {
     bundleName?: string;            // bundle名，不配则取默认值 'resources'
     preventTouch?: boolean;         // 是否开启触摸拦截，默认关闭
     preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 150)，最后一位表示透明度。null表示不设颜色
-    zOrder?: number;                // 指定层级(未指定ui从1开始递增；指定ui设为 zOrder + n（n为实例数量）)
+    zOrder?: number;                // 指定层级(未指定ui从1开始递增；指定ui设为指定值)
     multiInstance?: boolean;        // 是否允许生成多个实例(默认否)，多实例ui暂时不做缓存
 }
 
@@ -390,9 +390,8 @@ export class UIManager {
             }
             uiInfo.zOrder = autoZCnt + 1;
         } else {
-            // 主动指定zOrder(zOrder + n)
-            let cnt = this.getUICnt(uiId);
-            uiInfo.zOrder = uiConf.zOrder! + 1 + cnt;
+            // 主动指定zOrder
+            uiInfo.zOrder = uiConf.zOrder;
         }
         this._uiStack.push(uiInfo);
         this._uiStack.sort(this._sortUIStack.bind(this));
@@ -485,6 +484,7 @@ export class UIManager {
         let preUIInfo = this._uiStack[uiCount - 2];
         // 处理显示模式
         this._updateUI();
+        this._isClosing = true;
         let close = () => {
             this._isClosing = false;
             // 显示之前的界面

@@ -11,10 +11,12 @@
 *   2018-5-7 by 宝爷
 */
 
+import { warn } from "cc";
+
 // 任务结束回调
 export type TaskFinishCallback = () => void;
 // 任务执行回调
-export type TaskCallback = (taskFinishCb : TaskFinishCallback) => void;
+export type TaskCallback = (taskFinishCb: TaskFinishCallback) => void;
 
 class TaskInfo {
     public task: TaskCallback;
@@ -60,7 +62,7 @@ export class TaskQueue {
                 if (taskInfo === this._curTask) {
                     this.executeNextTask();
                 } else {
-                    console.warn("your task finish twice!");
+                    warn("your task finish twice!");
                 }
             });
         }
@@ -68,7 +70,7 @@ export class TaskQueue {
 }
 
 export class TaskManager {
-    private static _instance: TaskManager | null= null;
+    private static _instance: TaskManager | null = null;
     private _taskQueues: { [key: number]: TaskQueue } = {}
 
     public static getInstance(): TaskManager {
@@ -125,7 +127,7 @@ export class TaskManager {
 export function testQueue() {
     let creatTask = (idx, pri): TaskCallback => {
         return (finish) => {
-            console.log(`execute task ${idx} priority ${pri}`);
+            log(`execute task ${idx} priority ${pri}`);
             finish();
         };
     };
@@ -152,7 +154,7 @@ export function testQueue() {
             Object.defineProperty(task, "idx", { value: i });
             TaskManager.getInstance().pushTaskByTag(task, tag, priority);
         }
-        console.log("add task finish, start test");
+        log("add task finish, start test");
         finish();
         // 测试重复调用结束
         finish();

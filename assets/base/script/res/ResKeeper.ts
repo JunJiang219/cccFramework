@@ -21,14 +21,14 @@ export class ResKeeper extends Component {
      * @param bundle        assetbundle的路径
      * @param url           资源url或url数组
      * @param type          资源类型，默认为null
-     * @param onProgess     加载进度回调
+     * @param onProgress    加载进度回调
      * @param onCompleted   加载完成回调
      */
-     public load<T extends Asset>(paths: string | string[], type: AssetType<T> | null, onProgress: ProgressCallback | null, onComplete: CompleteCallback<T> | null, bundleName?: string): void;
-     public load<T extends Asset>(paths: string | string[], onProgress: ProgressCallback | null, onComplete: CompleteCallback<T> | null, bundleName?: string): void;
-     public load<T extends Asset>(paths: string | string[], onComplete?: CompleteCallback<T> | null, bundleName?: string): void;
-     public load<T extends Asset>(paths: string | string[], type: AssetType<T> | null, onComplete?: CompleteCallback<T> | null, bundleName?: string): void;
-     public load<T extends Asset>(): void {
+    public load<T extends Asset>(paths: string | string[], type: AssetType<T> | null, onProgress: ProgressCallback | null, onComplete: CompleteCallback<T> | null, bundleName?: string): void;
+    public load<T extends Asset>(paths: string | string[], onProgress: ProgressCallback | null, onComplete: CompleteCallback<T> | null, bundleName?: string): void;
+    public load<T extends Asset>(paths: string | string[], onComplete?: CompleteCallback<T> | null, bundleName?: string): void;
+    public load<T extends Asset>(paths: string | string[], type: AssetType<T> | null, onComplete?: CompleteCallback<T> | null, bundleName?: string): void;
+    public load<T extends Asset>(): void {
         let args = ResUtil.makeLoadResArgs.apply(this, arguments as any);
         args!.keeper = this;
         resLoader.load(args as any);

@@ -3,6 +3,7 @@
  */
 
 import { Asset, SpriteFrame } from 'cc';
+import { error } from 'cc';
 import { _decorator } from 'cc';
 import { resLoader } from './ResLoader';
 
@@ -69,7 +70,7 @@ export class ResDefault {
                     cb(asset);
                 }, cf.bundle);
             } else {
-                console.error(`ResDefault.getRes(): not configured, resId = ${resId}`);
+                error(`ResDefault.getRes(): not configured, resId = ${resId}`);
                 cb(null);
             }
         } else {

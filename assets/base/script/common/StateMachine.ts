@@ -10,14 +10,16 @@
  * 
  */
 
+import { warn } from "cc";
+import { error } from "cc";
 import { ComUtil } from "../utils/ComUtil";
 
 // 状态机默认值
 const fsm_defaults = {
     wildcard: "*",
     init: {
-      name: 'init',
-      from: 'none'
+        name: 'init',
+        from: 'none'
     },
 }
 export type FsmEventCallbacks = { [lifecycleEvent: string]: Function };
@@ -36,10 +38,10 @@ export interface IFsmInitObj {
 
 export interface IFsmLifecycleEvents {
     onBefore?: { [transition: string]: string },
-    onAfter?:  { [transition: string]: string },
-    onEnter?:  { [state: string]: string },
-    onLeave?:  { [state: string]: string },
-    on?:       { [key: string]: string },
+    onAfter?: { [transition: string]: string },
+    onEnter?: { [state: string]: string },
+    onLeave?: { [state: string]: string },
+    on?: { [key: string]: string },
 }
 
 export interface IFsmTransitArgs {
@@ -83,7 +85,7 @@ export class StateMachine {
         this.configureMethods(param.methods);
         if (param.init) this._fire(initTransition.name!, []);
     }
-    
+
     public get state() { return this._state; }                          // 当前状态
     public allStates() { return this._states; }                         // 全部状态
     public transitions() { return this._transitionsFor(this._state); }   // 当前状态全部可执行转换
@@ -158,7 +160,7 @@ export class StateMachine {
     private _addStateLifecycleNames(name: string) {
         this._lifecycleEvents.onEnter![name] = ComUtil.camelize_prefix('onEnter', name);
         this._lifecycleEvents.onLeave![name] = ComUtil.camelize_prefix('onLeave', name);
-        this._lifecycleEvents.on![name]      = ComUtil.camelize_prefix('on',      name);
+        this._lifecycleEvents.on![name] = ComUtil.camelize_prefix('on', name);
     }
 
     // 删除生命周期名 - 状态相关
@@ -201,8 +203,8 @@ export class StateMachine {
     // 添加生命周期名 - 转换相关
     private _addTransitionLifecycleNames(name: string) {
         this._lifecycleEvents.onBefore![name] = ComUtil.camelize_prefix('onBefore', name);
-        this._lifecycleEvents.onAfter![name]  = ComUtil.camelize_prefix('onAfter',  name);
-        this._lifecycleEvents.on![name]       = ComUtil.camelize_prefix('on',       name);
+        this._lifecycleEvents.onAfter![name] = ComUtil.camelize_prefix('onAfter', name);
+        this._lifecycleEvents.on![name] = ComUtil.camelize_prefix('on', name);
     }
 
     // 删除生命周期名 - 转换相关
@@ -216,7 +218,7 @@ export class StateMachine {
     private _mapTransition(transition: IFsmTransition) {
         var name = transition.name as string,
             from = transition.from as string,
-            to   = transition.to;
+            to = transition.to;
         this._addState(from);
         if (typeof to !== 'function') this._addState(to!);
         this._addTransition(name);
@@ -253,11 +255,11 @@ export class StateMachine {
     // 配置通用生命周期名
     private _configureLifecycle() {
         this._lifecycleEvents = {
-          onBefore: { transition: 'onBeforeTransition' },
-          onAfter:  { transition: 'onAfterTransition'  },
-          onEnter:  { state:      'onEnterState'       },
-          onLeave:  { state:      'onLeaveState'       },
-          on:       { transition: 'onTransition'       },
+            onBefore: { transition: 'onBeforeTransition' },
+            onAfter: { transition: 'onAfterTransition' },
+            onEnter: { state: 'onEnterState' },
+            onLeave: { state: 'onLeaveState' },
+            on: { transition: 'onTransition' },
         };
     }
 
@@ -280,11 +282,11 @@ export class StateMachine {
     public configureTransitions(transitions?: IFsmTransition[]) {
         if (!transitions || this.isPending()) return false;
         var i, n, transition, from, to, wildcard = fsm_defaults.wildcard;
-        for(n = 0 ; n < transitions.length ; n++) {
+        for (n = 0; n < transitions.length; n++) {
             transition = transitions[n];
             from = Array.isArray(transition.from) ? transition.from : [transition.from || wildcard];
             to = transition.to || wildcard;
-            for(i = 0 ; i < from.length ; i++) {
+            for (i = 0; i < from.length; i++) {
                 this._mapTransition({ name: transition.name, from: from[i], to: to });
             }
         }
@@ -295,11 +297,11 @@ export class StateMachine {
     public delTransitions(transitions: IFsmTransition[]) {
         if (this.isPending()) return false;
         var i, n, transition, from, to, wildcard = fsm_defaults.wildcard;
-        for(n = 0 ; n < transitions.length ; n++) {
+        for (n = 0; n < transitions.length; n++) {
             transition = transitions[n];
             from = Array.isArray(transition.from) ? transition.from : [transition.from || wildcard];
             to = transition.to || wildcard;
-            for(i = 0 ; i < from.length ; i++) {
+            for (i = 0; i < from.length; i++) {
                 this._mapTransition_del({ name: transition.name, from: from[i], to: to });
             }
         }
@@ -326,8 +328,8 @@ export class StateMachine {
 
     private _seek(transition: string, args?: any[]) {
         let wildcard = fsm_defaults.wildcard,
-            entry    = this._transitionFor(this.state, transition),
-            to       = entry && entry.to;
+            entry = this._transitionFor(this.state, transition),
+            to = entry && entry.to;
         if (typeof to === 'function')
             if (args) {
                 return to(...args);
@@ -359,7 +361,7 @@ export class StateMachine {
      */
     private _transit(transition: string, from: string, to: string, args: any[]) {
         let lifecycle = this._lifecycleEvents,
-            changed   = (from !== to);
+            changed = (from !== to);
 
         if (!to) return this.onInvalidTransition(transition, from, to);
 
@@ -371,24 +373,24 @@ export class StateMachine {
 
         args.unshift({             // this context will be passed to each lifecycle event observer
             transition: transition,
-            from:       from,
-            to:         to,
-            fsm:        this,
+            from: from,
+            to: to,
+            fsm: this,
         });
 
         return this._observeEvents([
-                    lifecycle.onBefore!.transition,
-                    lifecycle.onBefore![transition],
+            lifecycle.onBefore!.transition,
+            lifecycle.onBefore![transition],
             changed ? lifecycle.onLeave!.state : null,
             changed ? lifecycle.onLeave![from] : null,
-                    lifecycle.on!.transition,
+            lifecycle.on!.transition,
             changed ? 'doTransit' : null,
             changed ? lifecycle.onEnter!.state : null,
-            changed ? lifecycle.onEnter![to]   : null,
-            changed ? lifecycle.on![to]        : null,
-                    lifecycle.onAfter!.transition,
-                    lifecycle.onAfter![transition],
-                    lifecycle.on![transition]
+            changed ? lifecycle.onEnter![to] : null,
+            changed ? lifecycle.on![to] : null,
+            lifecycle.onAfter!.transition,
+            lifecycle.onAfter![transition],
+            lifecycle.on![transition]
         ], args);
     }
 
@@ -409,7 +411,7 @@ export class StateMachine {
     // 观察事件
     private _observeEvents(events: any[], args: any[], previousEvent?: string, previousResult?: boolean): any {
         if (events.length === 0) {
-          return this._endTransit(previousResult === undefined ? true : previousResult);
+            return this._endTransit(previousResult === undefined ? true : previousResult);
         }
 
         let event = events.shift(), result: any = null;
@@ -421,7 +423,7 @@ export class StateMachine {
         }
         if (result && typeof result.then === 'function') {
             return result.then(this._observeEvents.bind(this, events, args, event))
-                        .catch(this._failTransit.bind(this))
+                .catch(this._failTransit.bind(this))
         } else if (result === false) {
             return this._endTransit(false);
         } else {
@@ -429,26 +431,26 @@ export class StateMachine {
         }
     }
 
-    private _beginTransit()                         { this._pending = true;                 }
-    private _endTransit(result: any)                { this._pending = false; return result; }
-    private _failTransit(result: any)               { this._pending = false; throw result;  }
-    private _doTransit(lifecycle: IFsmTransitArgs)  { this._state = lifecycle.to!;          }
+    private _beginTransit() { this._pending = true; }
+    private _endTransit(result: any) { this._pending = false; return result; }
+    private _failTransit(result: any) { this._pending = false; throw result; }
+    private _doTransit(lifecycle: IFsmTransitArgs) { this._state = lifecycle.to!; }
 
     // 无效转换
     public onInvalidTransition(transition: string, from: string, to: string) {
         if (this._eventCallbacks.onInvalidTransition) {
             this._eventCallbacks.onInvalidTransition(transition, from, to);
         } else {
-            console.error("transition is invalid in current state - ", transition, from, to, this._state);
+            error("transition is invalid in current state - ", transition, from, to, this._state);
         }
     }
-    
+
     // 转换进行中
     public onPendingTransition(transition: string, from: string, to: string) {
         if (this._eventCallbacks.onPendingTransition) {
             this._eventCallbacks.onPendingTransition(transition, from, to);
         } else {
-            console.warn("transition is invalid while previous transition is still in progress - ", transition, from, to, this._state);
+            warn("transition is invalid while previous transition is still in progress - ", transition, from, to, this._state);
         }
     }
 

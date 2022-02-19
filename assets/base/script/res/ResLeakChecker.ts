@@ -4,6 +4,7 @@
  * 2021-1-31 by 宝爷
  */
 
+import { log } from "cc";
 import { Asset, assetManager, isValid } from "cc";
 import { ResUtil } from "./ResUtil";
 
@@ -18,7 +19,7 @@ declare module "cc" {
 
 export class ResLeakChecker {
     private static _instance: ResLeakChecker | null = null;
-    private constructor() {}
+    private constructor() { }
     public static getInstance(): ResLeakChecker {
         if (!this._instance) this._instance = new ResLeakChecker();
         return this._instance;
@@ -50,7 +51,7 @@ export class ResLeakChecker {
         if (!idList || idList.length <= 0) this.resFilter = null;
 
         let filterUUID = idList;
-        this.resFilter = function(asset: Asset): boolean {
+        this.resFilter = function (asset: Asset): boolean {
             if (asset && filterUUID?.indexOf(asset._uuid) != -1) return true;
             return false;
         }
@@ -146,10 +147,10 @@ export class ResLeakChecker {
         this.traceAssets.forEach(element => {
             let traceMap: Map<string, number> | undefined = element.traceMap;
             if (traceMap) {
-                console.log('----------------------------------------------');
-                console.log(`追踪资源: name = ${element.name}, uuid = ${element._uuid}, refCount = ${element.refCount}`);
+                log('----------------------------------------------');
+                log(`追踪资源: name = ${element.name}, uuid = ${element._uuid}, refCount = ${element.refCount}`);
                 traceMap.forEach((value, key) => {
-                    console.log(`${value} : ${key} `);
+                    log(`${value} : ${key} `);
                 });
             }
         })
@@ -157,7 +158,7 @@ export class ResLeakChecker {
 
     public dumpAssetInfo(uuid: string) {
         let info = assetManager.assets.get(uuid);
-        console.log(info);
+        log(info);
     }
 }
 

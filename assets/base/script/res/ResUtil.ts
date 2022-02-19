@@ -3,6 +3,7 @@
  * 2020-1-18 by 宝爷
  */
 
+import { error } from "cc";
 import { instantiate, Node, Asset, Prefab, __private, Constructor, js } from "cc";
 import { ResKeeper } from "./ResKeeper";
 
@@ -28,7 +29,7 @@ export class ResUtil {
      */
     public static makeLoadResArgs<T extends Asset>(): ILoadResArgs<T> | null {
         if (arguments.length < 1) {
-            console.error(`makeLoadResArgs error ${arguments}`);
+            error(`makeLoadResArgs error ${arguments}`);
             return null;
         }
 
@@ -40,7 +41,7 @@ export class ResUtil {
         } else if (arguments[0] instanceof Object) {
             return arguments[0];    // 已经是 ILoadResArgs
         } else {
-            console.error(`makeLoadResArgs error ${arguments}`);
+            error(`makeLoadResArgs error ${arguments}`);
             return null;
         }
 
@@ -68,7 +69,7 @@ export class ResUtil {
      */
     public static makeLoadRemoteArgs<T extends Asset>(): ILoadResArgs<T> | null {
         if (arguments.length < 1) {
-            console.error(`makeLoadRemoteArgs error ${arguments}`);
+            error(`makeLoadRemoteArgs error ${arguments}`);
             return null;
         }
 
@@ -78,7 +79,7 @@ export class ResUtil {
         } else if (arguments[0] instanceof Object) {
             return arguments[0];    // 已经是 ILoadResArgs
         } else {
-            console.error(`makeLoadRemoteArgs error ${arguments}`);
+            error(`makeLoadRemoteArgs error ${arguments}`);
             return null;
         }
 
@@ -127,7 +128,7 @@ export class ResUtil {
             keeper.cacheAsset(srcAsset);
             return srcAsset;
         } else {
-            console.error(`assignWith ${srcAsset} to ${targetNode} failed`);
+            error(`assignWith ${srcAsset} to ${targetNode} failed`);
             return null;
         }
     }

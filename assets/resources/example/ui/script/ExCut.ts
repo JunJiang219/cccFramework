@@ -1,4 +1,5 @@
 
+import { log } from 'cc';
 import { _decorator, Component, director } from 'cc';
 const { ccclass, property } = _decorator;
 
@@ -10,6 +11,6 @@ export class ExCut extends Component {
     }
 
     onDestroy() {
-        console.log('ExCut.onDestroy()');
+        log('ExCut.onDestroy()');
     }
 }

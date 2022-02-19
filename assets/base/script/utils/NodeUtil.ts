@@ -5,6 +5,7 @@ import { Node, UITransform, v2, Vec2 } from "cc";
 import { Layers } from "cc";
 import { Sprite } from "cc";
 import { director } from "cc";
+import { log } from "cc";
 import { SpriteFrame } from "cc";
 import { Color } from "cc";
 import { view } from "cc";
@@ -91,7 +92,7 @@ export class NodeUtil {
         let pt = result.pt;
         let rect = result.rect;
 
-        console.log(`模拟点击坐标：${pt.x}, ${pt.y}`);
+        log(`模拟点击坐标：${pt.x}, ${pt.y}`);
         let touch = inputManager.getTouchByXY(pt.x, pt.y, rect);
         inputManager.handleTouchesBegin([touch]);
         duration = duration || 200;
@@ -116,13 +117,13 @@ export class NodeUtil {
         let endPt = resultEnd.pt;
         let endRect = resultEnd.rect;
 
-        console.log(`模拟按下坐标：${startPt.x}, ${startPt.y}`);
+        log(`模拟按下坐标：${startPt.x}, ${startPt.y}`);
         let touchStart = inputManager.getTouchByXY(startPt.x, startPt.y, startRect);
         let touchEnd = inputManager.getTouchByXY(endPt.x, endPt.y, endRect);
         inputManager.handleTouchesBegin([touchStart]);
         duration = duration || 400;
         setTimeout(() => {
-            console.log(`模拟抬起坐标：${startPt.x}, ${startPt.y}`);
+            log(`模拟抬起坐标：${startPt.x}, ${startPt.y}`);
             inputManager.handleTouchesEnd([touchEnd]);
         }, duration);
     }
@@ -133,10 +134,10 @@ export class NodeUtil {
      * @param duration 按下至抬起的间隔时间（ms）
      */
     public static simulation_clickNode(node: Node, duration?: number) {
-        console.log('自动执行，模拟点击');
-        console.log('自动节点 :', JSON.stringify(node.position));
+        log('自动执行，模拟点击');
+        log('自动节点 :', JSON.stringify(node.position));
         let wp = node.parent?.getComponent(UITransform)?.convertToWorldSpaceAR(node.position);
-        console.log('世界节点 :', JSON.stringify(wp));
+        log('世界节点 :', JSON.stringify(wp));
         NodeUtil.simulation_click(wp!.x, wp!.y, duration);
     }
 

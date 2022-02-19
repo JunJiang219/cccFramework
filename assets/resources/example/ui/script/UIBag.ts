@@ -1,4 +1,5 @@
 
+import { log } from 'cc';
 import { _decorator } from 'cc';
 import { sceneMgr } from '../../../../base/script/scene/SceneManager';
 import { UIView } from '../../../../base/script/ui/UIView';
@@ -12,13 +13,13 @@ export class UIBag extends UIView {
     }
 
     public onOpen(fromUI: UIView, ...args: any[]): void {
-        console.log('onOpen -----');
+        log('onOpen -----');
         if (fromUI) {
-            console.log(fromUI.uiId);
+            log(fromUI.uiId);
         } else {
-            console.log(0);
+            log(0);
         }
-        console.log(args);
+        log(args);
     }
 
     onDestroy() {

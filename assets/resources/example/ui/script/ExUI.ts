@@ -1,4 +1,5 @@
 
+import { log } from 'cc';
 import { _decorator, Component, assetManager, director } from 'cc';
 import { sceneMgr } from '../../../../base/script/scene/SceneManager';
 import { IUIConf } from '../../../../base/script/ui/UIManager';
@@ -39,6 +40,6 @@ export class ExUI extends Component {
     }
 
     onDestroy() {
-        console.log('ExUI.onDestroy()');
+        log('ExUI.onDestroy()');
     }
 }

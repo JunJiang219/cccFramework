@@ -4,7 +4,7 @@
 //  * ResPool，可提高资源缓存的效率，
 //  * 当超过警戒水位时，每次加载新的资源都会自动检查可释放的资源进行释放
 //  * 也可以手动调用releaseUnuseRes，自动释放可释放的资源
-//  * 
+//  *
 //  * 2020-1-19 by 宝爷
 //  */
 
@@ -56,7 +56,7 @@
 
 //     /**
 //      * 是否缓存了某url（这里的url为resloader的_resMap的key，可能不等于加载的url）
-//      * @param url 
+//      * @param url
 //      */
 //     public hasResUrl(url: string) : boolean {
 //         for (let i = 0; i < this._urls.length; ++i) {
@@ -69,7 +69,7 @@
 
 //     /**
 //      * 加载完成后添加一个use
-//      * @param url 
+//      * @param url
 //      */
 //     private addNewResUrl(url: string) {
 //         if (!this.hasResUrl(url) && resLoader.addUse(url, this._useKey)) {
@@ -112,6 +112,6 @@
 //      * 调试打印缓存的urls
 //      */
 //     public dump() {
-//         console.log(this._urls);
+//         log(this._urls);
 //     }
 // }

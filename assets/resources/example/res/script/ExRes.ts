@@ -1,4 +1,5 @@
 
+import { log } from 'cc';
 import { _decorator, Component, SpriteFrame, Sprite, EventTouch, assetManager, resources } from 'cc';
 import { IFsmInitObj, StateMachine } from '../../../../base/script/common/StateMachine';
 import { ResLeakChecker } from '../../../../base/script/res/ResLeakChecker';
@@ -8,7 +9,7 @@ const { ccclass, property } = _decorator;
 class Test extends StateMachine {
     public constructor(param: IFsmInitObj, a: string) {
         super(param);
-        console.log(a);
+        log(a);
     }
 }
 
@@ -32,22 +33,22 @@ export class ExRes extends Component {
                 { name: 'goto', from: '*', to: this.abc.bind(this) }
             ],
             methods: {
-                onBeforeTransition: function () { console.log('onBeforeTransition', arguments, arguments[0].event) },
-                onAfterTransition: function () { console.log('onAfterTransition', arguments, arguments[0].event) },
-                onEnterState: function () { console.log('onEnterState', arguments, arguments[0].event) },
-                onLeaveState: function () { console.log('onLeaveState', arguments, arguments[0].event) },
-                onTransition: function () { console.log('onTransition', arguments, arguments[0].event) },
+                onBeforeTransition: function () { log('onBeforeTransition', arguments, arguments[0].event) },
+                onAfterTransition: function () { log('onAfterTransition', arguments, arguments[0].event) },
+                onEnterState: function () { log('onEnterState', arguments, arguments[0].event) },
+                onLeaveState: function () { log('onLeaveState', arguments, arguments[0].event) },
+                onTransition: function () { log('onTransition', arguments, arguments[0].event) },
             }
         }, "abc");
-        console.log(test.allStates());
+        log(test.allStates());
         // test.delTransitions([
         //     { name: 'melt',     from: 'solid',  to: 'liquid' },
         //     // { name: 'freeze',   from: 'liquid', to: 'solid'  },
         // ]);
         test.execTransit('goto', 'liquid');
-        console.log(test.state);
+        log(test.state);
         // test.execTransit('freeze');
-        // console.log(test.state);
+        // log(test.state);
     }
 
     public async abc(s: string): Promise<string> {
@@ -110,7 +111,7 @@ export class ExRes extends Component {
     }
 
     public dumpAsset() {
-        console.log(assetManager.assets);
+        log(assetManager.assets);
     }
 
     public dumpTrace() {
