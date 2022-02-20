@@ -1,6 +1,6 @@
 import { Asset, Component, _decorator } from "cc";
 import { resLoader } from "./ResLoader";
-import { AssetType, CompleteCallback, IRemoteOptions, ProgressCallback, ResUtil } from "./ResUtil";
+import { AssetType, CompleteCallback, IRemoteOptions, ProgressCallback, ResUtils } from "./ResUtils";
 /**
  * 资源引用类
  * 1. 提供加载功能，并记录加载过的资源
@@ -29,7 +29,7 @@ export class ResKeeper extends Component {
     public load<T extends Asset>(paths: string | string[], onComplete?: CompleteCallback<T> | null, bundleName?: string): void;
     public load<T extends Asset>(paths: string | string[], type: AssetType<T> | null, onComplete?: CompleteCallback<T> | null, bundleName?: string): void;
     public load<T extends Asset>(): void {
-        let args = ResUtil.makeLoadResArgs.apply(this, arguments as any);
+        let args = ResUtils.makeLoadResArgs.apply(this, arguments as any);
         args!.keeper = this;
         resLoader.load(args as any);
     }
@@ -39,7 +39,7 @@ export class ResKeeper extends Component {
     public loadDir<T extends Asset>(dir: string, onComplete?: CompleteCallback<T[]> | null, bundleName?: string): void;
     public loadDir<T extends Asset>(dir: string, type: AssetType<T> | null, onComplete?: CompleteCallback<T[]> | null, bundleName?: string): void;
     public loadDir<T extends Asset>(): void {
-        let args = ResUtil.makeLoadResArgs.apply(this, arguments as any);
+        let args = ResUtils.makeLoadResArgs.apply(this, arguments as any);
         args!.keeper = this;
         resLoader.loadDir(args as any);
     }
@@ -47,7 +47,7 @@ export class ResKeeper extends Component {
     public loadRemote<T extends Asset>(url: string, options: IRemoteOptions | null, onComplete?: CompleteCallback<T> | null): void;
     public loadRemote<T extends Asset>(url: string, onComplete?: CompleteCallback<T> | null): void;
     public loadRemote<T extends Asset>(): void {
-        let args = ResUtil.makeLoadRemoteArgs.apply(this, arguments as any);
+        let args = ResUtils.makeLoadRemoteArgs.apply(this, arguments as any);
         args!.keeper = this;
         resLoader.loadRemote(args as any);
     }

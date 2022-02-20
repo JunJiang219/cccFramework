@@ -8,11 +8,11 @@
 
 import { Asset, resources, assetManager, AssetManager, isValid } from "cc";
 import { ResLeakChecker } from "./ResLeakChecker";
-import { AssetType, CompleteCallback, ILoadResArgs, IRemoteOptions, ProgressCallback, ResUtil } from "./ResUtil";
+import { AssetType, CompleteCallback, ILoadResArgs, IRemoteOptions, ProgressCallback, ResUtils } from "./ResUtils";
 
 export class ResLoader {
     private static _instance: ResLoader | null = null;
-    private constructor() {}
+    private constructor() { }
     public static getInstance(): ResLoader {
         if (!ResLoader._instance) ResLoader._instance = new ResLoader();
         return ResLoader._instance;
@@ -66,7 +66,7 @@ export class ResLoader {
                 bundle.load(args.paths, args.type!, args.onProgress!, finishCb);
             } else {
                 bundle.load(args.paths as string[], args.type!, args.onProgress!, finishCb);
-            }    
+            }
         }
     }
 
@@ -101,7 +101,7 @@ export class ResLoader {
     public load<T extends Asset>(paths: string | string[], onComplete?: CompleteCallback<T> | null, bundleName?: string): void;
     public load<T extends Asset>(paths: string | string[], type: AssetType<T> | null, onComplete?: CompleteCallback<T> | null, bundleName?: string): void;
     public load<T extends Asset>(): void {
-        let args = ResUtil.makeLoadResArgs.apply(this, arguments as any);
+        let args = ResUtils.makeLoadResArgs.apply(this, arguments as any);
         if (args) this._loadByArgs(args);
     }
 
@@ -118,7 +118,7 @@ export class ResLoader {
     public loadDir<T extends Asset>(dir: string, onComplete?: CompleteCallback<T[]> | null, bundleName?: string): void;
     public loadDir<T extends Asset>(dir: string, type: AssetType<T> | null, onComplete?: CompleteCallback<T[]> | null, bundleName?: string): void;
     public loadDir<T extends Asset>(): void {
-        let args = ResUtil.makeLoadResArgs.apply(this, arguments as any);
+        let args = ResUtils.makeLoadResArgs.apply(this, arguments as any);
         if (args) {
             args.dir = args.paths as string;
             this._loadByArgs(args);
@@ -134,7 +134,7 @@ export class ResLoader {
     public loadRemote<T extends Asset>(url: string, options: IRemoteOptions | null, onComplete?: CompleteCallback<T> | null): void;
     public loadRemote<T extends Asset>(url: string, onComplete?: CompleteCallback<T> | null): void;
     public loadRemote<T extends Asset>(): void {
-        let args = ResUtil.makeLoadRemoteArgs.apply(this, arguments as any);
+        let args = ResUtils.makeLoadRemoteArgs.apply(this, arguments as any);
         if (args) {
             let finishCb: CompleteCallback<T> | CompleteCallback<T[]> | null = (err, assets) => {
                 if (!err) {

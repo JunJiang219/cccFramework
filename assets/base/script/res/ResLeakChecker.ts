@@ -6,7 +6,7 @@
 
 import { log } from "cc";
 import { Asset, assetManager, isValid } from "cc";
-import { ResUtil } from "./ResUtil";
+import { ResUtils } from "./ResUtils";
 
 export type FilterCallback = (asset: Asset) => boolean;
 
@@ -82,13 +82,13 @@ export class ResLeakChecker {
         let traceMap = new Map<string, number>();
         asset.traceMap = traceMap;
         asset.addRef = function (...args: any): Asset {
-            let stack = ResUtil.getCallStack(1);
+            let stack = ResUtils.getCallStack(1);
             let cnt = traceMap.has(stack) ? traceMap.get(stack)! + 1 : 1;
             traceMap.set(stack, cnt);
             return addRefFunc.apply(asset, args);
         }
         asset.decRef = function (...args: any): Asset {
-            let stack = ResUtil.getCallStack(1);
+            let stack = ResUtils.getCallStack(1);
             let cnt = traceMap.has(stack) ? traceMap.get(stack)! + 1 : 1;
             traceMap.set(stack, cnt);
             return decRefFunc.apply(asset, args);

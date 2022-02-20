@@ -7,7 +7,7 @@ import { instantiate } from "cc";
 import { Node } from "cc";
 import { DefaultResID, resDft } from "../res/ResDefault";
 import { resLoader } from "../res/ResLoader";
-import { ProgressCallback } from "../res/ResUtil";
+import { ProgressCallback } from "../res/ResUtils";
 import { UIShowTypes, UIView } from "./UIView";
 
 /**

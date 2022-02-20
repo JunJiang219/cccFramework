@@ -23,7 +23,7 @@ export interface ILoadResArgs<T extends Asset> {
     keeper?: ResKeeper;                                                 // 资源通过某 ResKeeper 加载
 }
 
-export class ResUtil {
+export class ResUtils {
     /**
      * 构建bundle内资源加载参数结构体
      */
@@ -106,7 +106,7 @@ export class ResUtil {
                 if (autoCreate) {
                     return attachNode.addComponent(ResKeeper);
                 } else {
-                    return ResUtil.getResKeeper(attachNode.parent!, autoCreate);
+                    return ResUtils.getResKeeper(attachNode.parent!, autoCreate);
                 }
             }
             return ret;
@@ -123,7 +123,7 @@ export class ResUtil {
     * @param autoCreate 
     */
     public static assignWith(srcAsset: Asset, targetNode: Node, autoCreate?: boolean): any {
-        let keeper = ResUtil.getResKeeper(targetNode, autoCreate);
+        let keeper = ResUtils.getResKeeper(targetNode, autoCreate);
         if (keeper && srcAsset instanceof Asset) {
             keeper.cacheAsset(srcAsset);
             return srcAsset;
@@ -139,7 +139,7 @@ export class ResUtil {
      */
     public static instantiate(prefab: Prefab): Node {
         let node = instantiate(prefab);
-        let keeper = ResUtil.getResKeeper(node, true);
+        let keeper = ResUtils.getResKeeper(node, true);
         if (keeper) {
             keeper.cacheAsset(prefab);
         }
@@ -173,7 +173,7 @@ export class ResUtil {
     public static getCallStack(popCount: number): string {
         // 严格模式无法访问 arguments.callee.caller 获取堆栈，只能先用Error的stack
         let ret = (new Error()).stack;
-        let pos = ResUtil.findCharPos(ret!, '\n', popCount);
+        let pos = ResUtils.findCharPos(ret!, '\n', popCount);
         if (pos > 0) {
             ret = ret!.slice(pos);
         }
