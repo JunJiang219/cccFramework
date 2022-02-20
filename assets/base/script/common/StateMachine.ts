@@ -57,10 +57,16 @@ export class StateMachine {
 
         let curState = this._state;
         let nextState = this._mapStates.get(key);
-        if (curState?.canLeave() && nextState?.canEnter()) {
-            this._state = nextState;
-            curState.onLeave();
-            nextState.onEnter();
+        if (nextState?.canEnter()) {
+            if (!curState) {
+                // 未设置初始状态，允许跳转
+                this._state = nextState;
+                nextState.onEnter();
+            } else if (curState.canLeave()) {
+                this._state = nextState;
+                curState.onLeave();
+                nextState.onEnter();
+            }
         }
     }
 
@@ -86,6 +92,7 @@ export class StateMachine {
 
     // 清理数据
     public clearData() {
+        this._state = null;
         this._mapStates.clear();
     }
 }
