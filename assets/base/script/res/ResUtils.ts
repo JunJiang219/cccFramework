@@ -6,6 +6,7 @@
 import { error } from "cc";
 import { instantiate, Node, Asset, Prefab, __private, Constructor, js } from "cc";
 import { ResKeeper } from "./ResKeeper";
+import { ResPool } from "./ResPool";
 
 export type ProgressCallback = __private.cocos_core_asset_manager_shared_ProgressCallback;
 export type CompleteCallback<T = any> = __private.cocos_core_asset_manager_shared_CompleteCallbackWithData;
@@ -21,6 +22,7 @@ export interface ILoadResArgs<T extends Asset> {
     onComplete?: CompleteCallback<T> | CompleteCallback<T[]> | null;    // 加载完成回调
     bundleName?: string;                                                // bundle名
     keeper?: ResKeeper;                                                 // 资源通过某 ResKeeper 加载
+    pool?: ResPool;                                                     // 资源通过某 ResPool 加载
 }
 
 export class ResUtils {

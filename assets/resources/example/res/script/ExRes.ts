@@ -1,17 +1,9 @@
 
 import { log } from 'cc';
 import { _decorator, Component, SpriteFrame, Sprite, EventTouch, assetManager, resources } from 'cc';
-import { IFsmInitObj, StateMachine } from '../../../../base/script/common/StateMachine';
 import { ResLeakChecker } from '../../../../base/script/res/ResLeakChecker';
 import { resLoader } from '../../../../base/script/res/ResLoader';
 const { ccclass, property } = _decorator;
-
-class Test extends StateMachine {
-    public constructor(param: IFsmInitObj, a: string) {
-        super(param);
-        log(a);
-    }
-}
 
 @ccclass('ExRes')
 export class ExRes extends Component {
@@ -23,32 +15,6 @@ export class ExRes extends Component {
 
     start() {
         this._initProj();
-        let test = new Test({
-            init: 'solid',
-            transitions: [
-                { name: 'melt', from: 'solid', to: 'liquid' },
-                { name: 'freeze', from: 'liquid', to: 'solid' },
-                { name: 'vaporize', from: 'liquid', to: 'gas' },
-                { name: 'condense', from: 'gas', to: 'liquid' },
-                { name: 'goto', from: '*', to: this.abc.bind(this) }
-            ],
-            methods: {
-                onBeforeTransition: function () { log('onBeforeTransition', arguments, arguments[0].event) },
-                onAfterTransition: function () { log('onAfterTransition', arguments, arguments[0].event) },
-                onEnterState: function () { log('onEnterState', arguments, arguments[0].event) },
-                onLeaveState: function () { log('onLeaveState', arguments, arguments[0].event) },
-                onTransition: function () { log('onTransition', arguments, arguments[0].event) },
-            }
-        }, "abc");
-        log(test.allStates());
-        // test.delTransitions([
-        //     { name: 'melt',     from: 'solid',  to: 'liquid' },
-        //     // { name: 'freeze',   from: 'liquid', to: 'solid'  },
-        // ]);
-        test.execTransit('goto', 'liquid');
-        log(test.state);
-        // test.execTransit('freeze');
-        // log(test.state);
     }
 
     public async abc(s: string): Promise<string> {
