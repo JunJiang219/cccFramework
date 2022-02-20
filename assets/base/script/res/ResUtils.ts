@@ -75,7 +75,7 @@ export class ResUtils {
 
         let resArgs: ILoadResArgs<T> = {};
         if (typeof arguments[0] == "string") {
-            resArgs.dir = arguments[0];
+            resArgs.paths = arguments[0];
         } else if (arguments[0] instanceof Object) {
             return arguments[0];    // 已经是 ILoadResArgs
         } else {
