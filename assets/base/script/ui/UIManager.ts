@@ -45,12 +45,15 @@ export interface IUIInfo {
 export interface IUIConf {
     prefab: string;                 // 预制体路径
     bundleName?: string;            // bundle名，不配则取默认值 'resources'
-    preventTouch?: boolean;         // 是否开启触摸拦截，默认关闭
-    preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 150)，最后一位表示透明度。null表示不设颜色
-    zOrder?: number;                // 指定层级(未指定ui从1开始递增；指定ui设为指定值)
-    multiInstance?: boolean;        // 是否允许生成多个实例(默认否)，多实例ui暂时不做缓存
     showType?: UIShowTypes;         // 界面显示类型(默认 UIShowTypes.UISingle)
+    preventTouch?: boolean;         // 是否开启触摸拦截，默认关闭
+    preventColor?: Color | null;    // 触摸拦截层颜色(默认 defPreventColor), null表示不设颜色
+    zOrder?: number;                // 指定层级(未指定ui从1开始递增; 指定ui设为指定值)
+    multiInstance?: boolean;        // 是否允许生成多个实例(默认否), 多实例ui暂时不做缓存
+    waterMark?: number;             // 多实例UI水位线(默认 defWaterMark)
 }
+const defWaterMark: number = 3;     // 默认多实例水位线
+const defPreventColor: Color = new Color(0, 0, 0, 150); // 默认触摸拦截层颜色
 
 export type UIOpenBeforeCallback = (uiView: UIView, preUIView: UIView) => void;
 export type UIOpenCallback = (uiView: UIView, preUIView: UIView) => void;
@@ -147,7 +150,7 @@ export class UIManager {
 
         let uiCom = node.addComponent(UITransform);
         uiCom.setContentSize(view.getVisibleSize());
-        if (undefined == color) color = new Color(0, 0, 0, 150);   // 取默认值
+        if (undefined == color) color = defPreventColor;   // 取默认值
         if (color) {
             let sprComp = node.addComponent(Sprite);
             sprComp.type = Sprite.Type.SIMPLE;
