@@ -8,7 +8,7 @@ import { Node } from "cc";
 import { DefaultResID, resDft } from "../res/ResDefault";
 import { resLoader } from "../res/ResLoader";
 import { ProgressCallback } from "../res/ResUtils";
-import { UIShowTypes, UIView } from "./UIView";
+import { UIView } from "./UIView";
 
 /**
  * UIManager界面管理类(请勿直接使用，建议通过 SceneManager 获取)
@@ -20,6 +20,14 @@ import { UIShowTypes, UIView } from "./UIView";
  * 
  * 2018-8-28 by 宝爷
  */
+
+/** 界面展示类型 */
+export enum UIShowTypes {
+    UISingle,           // 单界面显示，只显示当前界面和背景界面，性能较好
+    UIAddition,         // 叠加显示，性能较差
+    UIFullScreen,       // 全屏显示，全屏界面使用该选项可获得更高性能
+    UIIndependent,      // 独立显示，不影响其它界面，也不被其它界面影响
+};
 
 /** UI栈结构体 */
 export interface IUIInfo {
@@ -41,6 +49,7 @@ export interface IUIConf {
     preventColor?: Color | null;    // 触摸拦截层颜色，不填则默认(0, 0, 0, 150)，最后一位表示透明度。null表示不设颜色
     zOrder?: number;                // 指定层级(未指定ui从1开始递增；指定ui设为指定值)
     multiInstance?: boolean;        // 是否允许生成多个实例(默认否)，多实例ui暂时不做缓存
+    showType?: UIShowTypes;         // 界面显示类型(默认 UIShowTypes.UISingle)
 }
 
 export type UIOpenBeforeCallback = (uiView: UIView, preUIView: UIView) => void;
@@ -91,9 +100,14 @@ export class UIManager {
         this._sceneUUID = sceneUUID;
     }
 
-    // 设置背景UI层数
-    public setBackGroundUICnt(cnt: number) {
+    /**
+     * 设置背景UI层数
+     * @param cnt 层数
+     * @param forceUpdate 是否刷新ui
+     */
+    public setBackGroundUICnt(cnt: number, forceUpdate?: boolean) {
         this._backGroundUICnt = cnt;
+        forceUpdate && this._updateUI();
     }
 
     /** UI打开前回调 */
@@ -193,8 +207,11 @@ export class UIManager {
     private _updateUI() {
         let hideIndex: number = 0;
         let showIndex: number = this._uiStack.length - 1;
+        let uiId: number = 0, uiConf: IUIConf = null!;
         for (; showIndex >= 0; --showIndex) {
-            let mode = this._uiStack[showIndex].uiView!.showType;
+            uiId = this._uiStack[showIndex].uiId;
+            uiConf = this._uiConf[uiId];
+            let mode = (undefined == uiConf.showType) ? UIShowTypes.UISingle : uiConf.showType;
             // 无论何种模式，最顶部的UI都是应该显示的
             this._uiStack[showIndex].uiView!.node.active = true;
 

@@ -2,7 +2,7 @@
 import { log } from 'cc';
 import { _decorator, Component, assetManager, director } from 'cc';
 import { sceneMgr } from '../../../../base/script/scene/SceneManager';
-import { IUIConf } from '../../../../base/script/ui/UIManager';
+import { IUIConf, UIShowTypes } from '../../../../base/script/ui/UIManager';
 const { ccclass, property } = _decorator;
 
 export enum UIID {
@@ -11,7 +11,7 @@ export enum UIID {
 }
 
 const UIConf: { [uiId: number]: IUIConf } = {
-    [UIID.Bag]: { prefab: 'example/ui/prefab/UIBag', preventTouch: true, multiInstance: true },
+    [UIID.Bag]: { prefab: 'example/ui/prefab/UIBag', preventTouch: true, multiInstance: true, showType: UIShowTypes.UIAddition },
     [UIID.Head]: { prefab: 'example/ui/prefab/UIHead', preventTouch: false },
 }
 
