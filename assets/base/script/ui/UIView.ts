@@ -44,7 +44,7 @@ export class UIView extends ResKeeper {
 
     /********************** UI的回调 ***********************/
     /**
-     * 当界面被创建时回调，生命周期内只调用一次
+     * 当界面被创建时回调，生命周期内只调用一次(子类复写必须前置调用该父类逻辑)
      * @param uiId 界面id
      * @param args 可变参数
      */
@@ -58,30 +58,23 @@ export class UIView extends ResKeeper {
      * @param fromUI 从哪个UI打开的
      * @param args 可变参数
      */
-    public onOpen(fromUI: UIView, ...args: any[]): void {
-
-    }
+    public onOpen(fromUI: UIView, ...args: any[]): void { }
 
     /**
      * 每次界面Open动画播放完毕时回调
      */
-    public onOpenAniOver(): void {
-    }
+    public onOpenAniOver(): void { }
 
     /**
      * 当界面被关闭时回调，每次调用Close时回调
      * 返回值会传递给下一个界面
      */
-    public onClose(): any {
-
-    }
+    public onClose(): any { }
 
     /**
      * 当界面被置顶时回调，Open时并不会回调该函数
      * @param preUI 前一个ui
      * @param args 可变参数，
      */
-    public onTop(preUI: UIView, ...args: any[]): void {
-
-    }
+    public onTop(preUI: UIView, ...args: any[]): void { }
 }

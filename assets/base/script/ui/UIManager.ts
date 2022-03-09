@@ -344,26 +344,26 @@ export class UIManager {
         this._updateUI();
 
         // 从哪个界面打开的
-        let fromUIView: UIView = null!;
+        let fromUI: UIView = null!;
         if (this._uiStack.length > 1) {
             if (this.isTopUI(uiView)) {
-                fromUIView = this._uiStack[this._uiStack.length - 2].uiView!;
+                fromUI = this._uiStack[this._uiStack.length - 2].uiView!;
             } else {
-                fromUIView = this._uiStack[this._uiStack.length - 1].uiView!;
+                fromUI = this._uiStack[this._uiStack.length - 1].uiView!;
             }
         }
 
         // 打开界面之前回调
         if (this.uiOpenBeforeDelegate) {
-            this.uiOpenBeforeDelegate(uiView, fromUIView);
+            this.uiOpenBeforeDelegate(uiView, fromUI);
         }
 
         // 执行onOpen回调
-        uiView.onOpen(fromUIView, ...uiArgs);
+        uiView.onOpen(fromUI, ...uiArgs);
         this._autoExecAnimation(uiView, "uiOpen", () => {
             uiView.onOpenAniOver();
             if (this.uiOpenDelegate) {
-                this.uiOpenDelegate(uiView, fromUIView);
+                this.uiOpenDelegate(uiView, fromUI);
             }
         });
     }

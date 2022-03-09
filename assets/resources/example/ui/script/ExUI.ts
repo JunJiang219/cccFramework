@@ -12,7 +12,7 @@ export enum UIID {
 
 const UIConf: { [uiId: number]: IUIConf } = {
     [UIID.Bag]: { prefab: 'example/ui/prefab/UIBag', preventTouch: true, multiInstance: true, showType: UIShowTypes.UIAddition },
-    [UIID.Head]: { prefab: 'example/ui/prefab/UIHead', preventTouch: false },
+    [UIID.Head]: { prefab: 'example/ui/prefab/UIHead', preventTouch: false, showType: UIShowTypes.UIAddition },
 }
 
 @ccclass('ExUI')
@@ -25,7 +25,7 @@ export class ExUI extends Component {
             let uiMgr = sceneMgr.getUIManager();
             if (uiMgr) {
                 uiMgr.initUIConf(UIConf);
-                // uiMgr.open(UIID.Bag, null, 5);
+                uiMgr.open(UIID.Bag, null, 5);
                 uiMgr.open(UIID.Head, null, 8);
             }
         });
