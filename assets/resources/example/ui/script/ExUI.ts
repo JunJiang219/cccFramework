@@ -2,7 +2,7 @@
 import { log } from 'cc';
 import { _decorator, Component, assetManager, director } from 'cc';
 import { sceneMgr } from '../../../../base/script/scene/SceneManager';
-import { IUIConf, UIShowTypes } from '../../../../base/script/ui/UIManager';
+import { IUIConf } from '../../../../base/script/ui/UIManager';
 const { ccclass, property } = _decorator;
 
 export enum UIID {
