@@ -8,7 +8,7 @@ import { Node } from "cc";
 import { DefaultResID, resDft } from "../res/ResDefault";
 import { resLoader } from "../res/ResLoader";
 import { ProgressCallback } from "../res/ResUtils";
-import { UIView } from "./UIView";
+import { UIShowTypes, UIView } from "./UIView";
 
 /**
  * UIManager界面管理类(请勿直接使用，建议通过 SceneManager 获取)
@@ -20,14 +20,6 @@ import { UIView } from "./UIView";
  * 
  * 2018-8-28 by 宝爷
  */
-
-/** 界面展示类型 */
-export enum UIShowTypes {
-    UISingle,           // 单界面显示，只显示当前界面和背景界面，性能较好
-    UIAddition,         // 叠加显示，性能较差
-    UIFullScreen,       // 全屏显示，全屏界面使用该选项可获得更高性能
-    UIIndependent,      // 独立显示，不影响其它界面，也不被其它界面影响
-};
 
 /** UI栈结构体 */
 export interface IUIInfo {
@@ -45,14 +37,11 @@ export interface IUIInfo {
 export interface IUIConf {
     prefab: string;                 // 预制体路径
     bundleName?: string;            // bundle名，不配则取默认值 'resources'
-    showType?: UIShowTypes;         // 界面显示类型(默认 UIShowTypes.UISingle)
     preventTouch?: boolean;         // 是否开启触摸拦截，默认关闭
     preventColor?: Color | null;    // 触摸拦截层颜色(默认 defPreventColor), null表示不设颜色
     zOrder?: number;                // 指定层级(未指定ui从1开始递增; 指定ui设为指定值)
     multiInstance?: boolean;        // 是否允许生成多个实例(默认否), 多实例ui暂时不做缓存
-    waterMark?: number;             // 多实例UI水位线(默认 defWaterMark)
 }
-const defWaterMark: number = 3;     // 默认多实例水位线
 const defPreventColor: Color = new Color(0, 0, 0, 150); // 默认触摸拦截层颜色
 
 export type UIOpenBeforeCallback = (uiView: UIView, preUIView: UIView) => void;
@@ -210,11 +199,8 @@ export class UIManager {
     private _updateUI() {
         let hideIndex: number = 0;
         let showIndex: number = this._uiStack.length - 1;
-        let uiId: number = 0, uiConf: IUIConf = null!;
         for (; showIndex >= 0; --showIndex) {
-            uiId = this._uiStack[showIndex].uiId;
-            uiConf = this._uiConf[uiId];
-            let mode = (undefined == uiConf.showType) ? UIShowTypes.UISingle : uiConf.showType;
+            let mode = this._uiStack[showIndex].uiView!.showType;
             // 无论何种模式，最顶部的UI都是应该显示的
             this._uiStack[showIndex].uiView!.node.active = true;
 

@@ -1,6 +1,3 @@
-import { Enum, _decorator } from "cc";
-import { ResKeeper } from "../res/ResKeeper";
-
 /**
  * UIView界面基础类
  * 
@@ -20,7 +17,17 @@ import { ResKeeper } from "../res/ResKeeper";
  * 2018-8-28 by 宝爷
  */
 
+import { Enum, _decorator } from "cc";
+import { ResKeeper } from "../res/ResKeeper";
+
 const { ccclass, property } = _decorator;
+
+// 界面展示类型
+export enum UIShowTypes {
+    UISingle,           // 单界面显示，只显示当前界面和背景界面，性能较好
+    UIAddition,         // 叠加显示，性能较差
+    UIFullScreen,       // 全屏显示，全屏界面使用该选项可获得更高性能
+};
 
 @ccclass("UIView")
 export class UIView extends ResKeeper {
@@ -32,6 +39,10 @@ export class UIView extends ResKeeper {
     /** 缓存选项 */
     @property
     cache: boolean = false;
+
+    /** 界面显示类型 */
+    @property({ type: Enum(UIShowTypes) })
+    showType: UIShowTypes = UIShowTypes.UISingle;
 
     /** 界面id */
     private _uiId: number = 0;

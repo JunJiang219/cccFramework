@@ -1133,6 +1133,7 @@
     },
     "quickClose": true,
     "cache": true,
+    "showType": 1,
     "_id": ""
   },
   {
