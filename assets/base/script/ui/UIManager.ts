@@ -389,8 +389,8 @@ export class UIManager {
         // 设置UI的zOrder
         if (undefined == uiConf.zOrder) {
             // 自动生成zOrder(>=1)
-            let autoZCnt = this.getAutoZCnt();
-            uiInfo.zOrder = autoZCnt + 1;
+            let autoZMax = this.getAutoZMax();
+            uiInfo.zOrder = autoZMax + 1;
         } else {
             // 主动指定zOrder
             uiInfo.zOrder = uiConf.zOrder;
@@ -780,5 +780,19 @@ export class UIManager {
             if (undefined == this._uiConf[tmpId].zOrder) ++autoZCnt;
         }
         return autoZCnt;
+    }
+
+    // 获取ui栈中非人工指定zOrder的最大值
+    public getAutoZMax() {
+        let zOrder = 0, tmpId = 0;
+        for (let i = this._uiStack.length - 1; i >= 0; --i) {
+            tmpId = this._uiStack[i].uiId;
+            if (undefined != this._uiConf[tmpId].zOrder) {
+                zOrder = this._uiStack[i].zOrder || 0;
+                break;
+            }
+        }
+
+        return zOrder;
     }
 }
