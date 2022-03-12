@@ -4,18 +4,18 @@
 
 import { error, warn } from "cc";
 
-// 状态执行类型
+// 状态逻辑执行结果类型
 export enum StateExecuteType {
-    Continue,   // 继续
-    Break,      // 终止（下次再进入仍然复用旧状态对象）
-    Delete,     // 删除（下次再进入生成新状态对象）
+    Continue,   // 继续，保持该状态
+    Break,      // 终止，切换另一状态
+    Delete,     // 删除，注销该状态，并进入初始无效状态null
 }
 
 // 状态基类
 export class StateBase {
 
     // 构造函数
-    public constructor() { }
+    public constructor(...params: any[]) { }
 
     // 获取状态类型
     public getType(): string | number {
@@ -119,15 +119,14 @@ export class StateMachine {
         if ('string' == typeVal || 'number' == typeVal) {
             key = keyOrState as string | number;
             nextState = this._mapStates.get(key) || null;
+            if ('' == key || !nextState) {
+                error(`@StateMachine.switchState - the key of state is empty, key = ${key}`);
+                return;
+            }
         } else {
             isObj = true;
             nextState = keyOrState as StateBase | null;
             if (nextState) key = nextState.getType();
-        }
-
-        if ('' == key && !isObj) {
-            error('@StateMachine.switchState - the key of state is empty, keyOrState is ', keyOrState);
-            return;
         }
 
         if (curState && !curState.canLeave(this._obj, curState)) return;
@@ -147,9 +146,18 @@ export class StateMachine {
         return this._obj;
     }
 
-    // 获取状态合集
+    // 获取注册状态合集
     public getStates() {
         return this._mapStates;
+    }
+
+    /**
+     * 获取指定键值注册状态
+     * @param key 键值
+     * @returns 
+     */
+    public getKeyState(key: string | number) {
+        return this._mapStates.get(key) || null;
     }
 
     // 获取上一状态
@@ -167,7 +175,16 @@ export class StateMachine {
      * @param params 可选参数
      */
     public execute(...params: any[]) {
-        let execType: StateExecuteType = this._curState?.execute(this._obj, ...params) || StateExecuteType.Continue;
+        let execType: StateExecuteType = StateExecuteType.Continue;
+        if (this._curState) {
+            let stateType = this._curState.getType();
+            execType = this._curState.execute(this._obj, ...params);
+            if (StateExecuteType.Delete == execType) {
+                this.unRegState(stateType);
+                this.enterState(null);
+            }
+        }
+
         return execType;
     }
 
