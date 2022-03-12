@@ -167,15 +167,7 @@ export class StateMachine {
      * @param params 可选参数
      */
     public execute(...params: any[]) {
-        let execType: StateExecuteType = StateExecuteType.Continue;
-        if (this._curState) {
-            execType = this._curState.execute(this._obj, ...params);
-            if (StateExecuteType.Delete == execType) {
-                this.unRegState(this._curState.getType());
-                this.enterState(null);
-            }
-        }
-
+        let execType: StateExecuteType = this._curState?.execute(this._obj, ...params) || StateExecuteType.Continue;
         return execType;
     }
 
