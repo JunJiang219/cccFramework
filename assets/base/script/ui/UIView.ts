@@ -27,6 +27,7 @@ export enum UIShowTypes {
     UISingle,           // 单界面显示，只显示当前界面和背景界面，性能较好
     UIAddition,         // 叠加显示，性能较差
     UIFullScreen,       // 全屏显示，全屏界面使用该选项可获得更高性能
+    UIIndependent,      // 独立显示，不影响其它界面，也不被其它界面影响
 };
 
 @ccclass("UIView")
@@ -47,11 +48,11 @@ export class UIView extends ResKeeper {
     /** 界面id */
     private _uiId: number = 0;
     public get uiId() { return this._uiId; }
-    // 界面索引，用于区分相同界面不同实例
-    private _uiIndex: number = 0;
-    public get uiIndex() { return this._uiIndex; }
-    /**  静态变量，用于区分相同界面的不同实例 */
-    private static _uiCnt: number = 0;
+    // 界面唯一id，用于区分相同界面不同实例
+    private _objId: number = 0;
+    public get objId() { return this._objId; }
+    /**  静态变量，已生成实例对象数量 */
+    private static _objCnt: number = 0;
 
     /********************** UI的回调 ***********************/
     /**
@@ -61,7 +62,7 @@ export class UIView extends ResKeeper {
      */
     public init(uiId: number, ...args: any[]): void {
         this._uiId = uiId;
-        this._uiIndex = ++UIView._uiCnt;
+        this._objId = ++UIView._objCnt;
     }
 
     /**
