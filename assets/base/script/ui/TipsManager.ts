@@ -1,8 +1,8 @@
 
 import { log, _decorator } from 'cc';
-import { sceneMgr } from '../scene/SceneManager';
 import { IDialogArgs } from './DialogBase';
 import { IToastArgs } from './ToastBase';
+import { uiMgr } from './UIManager';
 const { ccclass, property } = _decorator;
 
 export interface ITipsConf {
@@ -12,11 +12,12 @@ export interface ITipsConf {
 
 @ccclass('TipsManager')
 export class TipsManager {
-    // 场景uuid
-    private _sceneUUID: string = '';
-    public get sceneUUID() { return this._sceneUUID; }
-    public constructor(sceneUUID: string) {
-        this._sceneUUID = sceneUUID;
+
+    private static _instance: TipsManager | null = null;
+    private constructor() { }
+    public static getInstance(): TipsManager {
+        if (!TipsManager._instance) TipsManager._instance = new TipsManager();
+        return TipsManager._instance;
     }
 
     /** UI配置 */
@@ -37,8 +38,7 @@ export class TipsManager {
             return;
         }
 
-        let uiMgr = sceneMgr.getUIManager(this._sceneUUID);
-        uiMgr?.open(uiId, null, args);
+        uiMgr.open(uiId, null, args);
     }
 
     // 隐藏模态提示框
@@ -49,8 +49,7 @@ export class TipsManager {
             return;
         }
 
-        let uiMgr = sceneMgr.getUIManager(this._sceneUUID);
-        uiMgr?.closeByID(uiId);
+        uiMgr.closeByID(uiId);
     }
 
     // 显示非模态提示
@@ -61,8 +60,7 @@ export class TipsManager {
             return;
         }
 
-        let uiMgr = sceneMgr.getUIManager(this._sceneUUID);
-        uiMgr?.open(uiId, null, args);
+        uiMgr.open(uiId, null, args);
     }
 
     // 隐藏非模态提示
@@ -73,7 +71,8 @@ export class TipsManager {
             return;
         }
 
-        let uiMgr = sceneMgr.getUIManager(this._sceneUUID);
-        uiMgr?.closeByID(uiId);
+        uiMgr.closeByID(uiId);
     }
 }
+
+export let tipsMgr = TipsManager.getInstance();

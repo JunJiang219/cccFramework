@@ -21,6 +21,16 @@ import { UIShowTypes, UIView } from "./UIView";
  * 2018-8-28 by 宝爷
  */
 
+// ui层级
+export enum UILayer {
+    GAME,
+    HUD,
+    POPUP,
+    ALERT,
+    NOTICE,
+    NUM         // 层级总数
+}
+
 /** UI栈结构体 */
 export interface IUIInfo {
     uiId: number;                               // uiView.uiId
@@ -67,9 +77,14 @@ export type UICloseCallback = (uiView: UIView) => void;
 /** --------------- ui配置示例 ----------------- */
 
 export class UIManager {
-    // 场景uuid
-    private _sceneUUID: string = '';
-    public get sceneUUID() { return this._sceneUUID; }
+
+    private static _instance: UIManager | null = null;
+    private constructor() { }
+    public static getInstance(): UIManager {
+        if (!UIManager._instance) UIManager._instance = new UIManager();
+        return UIManager._instance;
+    }
+
     /** 背景UI数量（有若干层UI是作为背景UI，而不受切换等影响）*/
     private _backGroundUICnt = 0;
     /** 是否正在关闭UI */
@@ -88,9 +103,6 @@ export class UIManager {
     /** UI配置 */
     private _uiConf: { [key: number]: IUIConf } = {};
 
-    public constructor(sceneUUID: string) {
-        this._sceneUUID = sceneUUID;
-    }
 
     /**
      * 设置背景UI层数
@@ -796,3 +808,5 @@ export class UIManager {
         return zOrder;
     }
 }
+
+export let uiMgr = UIManager.getInstance();

@@ -1,8 +1,7 @@
 
 import { log } from 'cc';
 import { _decorator, Component, assetManager, director } from 'cc';
-import { sceneMgr } from '../../../../base/script/scene/SceneManager';
-import { IUIConf } from '../../../../base/script/ui/UIManager';
+import { IUIConf, uiMgr } from '../../../../base/script/ui/UIManager';
 const { ccclass, property } = _decorator;
 
 export enum UIID {
@@ -22,12 +21,9 @@ export class ExUI extends Component {
         assetManager.loadBundle('base', (err, bundle) => {
             if (err) return;
 
-            let uiMgr = sceneMgr.getUIManager();
-            if (uiMgr) {
-                uiMgr.initUIConf(UIConf);
-                uiMgr.open(UIID.Bag, null, 5);
-                uiMgr.open(UIID.Head, null, 8);
-            }
+            uiMgr.initUIConf(UIConf);
+            uiMgr.open(UIID.Bag, null, 5);
+            uiMgr.open(UIID.Head, null, 8);
         });
     }
 
