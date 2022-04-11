@@ -28,6 +28,7 @@ export enum UILayer {
     POPUP,
     ALERT,
     NOTICE,
+    MASK,
     NUM         // 层级总数
 }
 
