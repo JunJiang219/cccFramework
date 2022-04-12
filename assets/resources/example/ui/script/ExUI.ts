@@ -29,10 +29,7 @@ export class ExUI extends Component {
 
     public onBtnChangeScene() {
         director.loadScene('ex_cut');
-        // let uiMgr = sceneMgr.getUIManager();
-        // if (uiMgr) {
-        //     uiMgr.closeByID(UIID.Head);
-        // }
+        // uiMgr.closeByID(UIID.Head);
     }
 
     onDestroy() {

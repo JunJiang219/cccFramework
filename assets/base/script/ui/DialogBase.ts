@@ -3,7 +3,7 @@
  */
 
 import { _decorator } from 'cc';
-import { sceneMgr } from '../scene/SceneManager';
+import { uiMgr } from './UIManager';
 import { UIView } from './UIView';
 const { ccclass, property } = _decorator;
 
@@ -61,8 +61,7 @@ export class DialogBase extends UIView {
             }
         }
 
-        let uiMgr = sceneMgr.getUIManager();
-        uiMgr?.close(this);
+        uiMgr.close(this);
     }
 
     // 取消处理
@@ -78,7 +77,6 @@ export class DialogBase extends UIView {
             }
         }
 
-        let uiMgr = sceneMgr.getUIManager();
-        uiMgr?.close(this);
+        uiMgr.close(this);
     }
 }
