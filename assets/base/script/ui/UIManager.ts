@@ -1,8 +1,9 @@
-import { Color, director, find, Layers, Sprite, SpriteFrame } from "cc";
+import { Color, director, find, Layers, Sprite, SpriteFrame, Widget } from "cc";
 import { log } from "cc";
 import { isValid } from "cc";
 import { view } from "cc";
 import { UITransform } from "cc";
+import { ResolutionPolicy } from "cc";
 import { instantiate } from "cc";
 import { Node } from "cc";
 import { DefaultResID, resDft } from "../res/ResDefault";
@@ -23,12 +24,12 @@ import { UIShowTypes, UIView } from "./UIView";
 
 // ui层级
 export enum UILayer {
-    GAME,
-    HUD,
-    POPUP,
-    ALERT,
-    NOTICE,
-    MASK,
+    GAME,       // 游戏主体
+    HUD,        // 游戏其它ui
+    POPUP,      // 弹出窗体ui
+    ALERT,      // 模态对话框 - Dialog
+    NOTICE,     // 非模态提示 - Toast
+    MASK,       // 遮罩
     NUM         // 层级总数
 }
 
@@ -90,6 +91,8 @@ export class UIManager {
     /** 是否正在打开UI */
     private _isOpening = false;
 
+    /** UI层级根节点 */
+    private _layerRoot: Node[] = [];
     /** UI界面缓存（key为uiId，value为UIView节点）*/
     private _uiCache: { [uiId: number]: UIView } = {};
     /** UI界面栈 */
@@ -134,6 +137,68 @@ export class UIManager {
      */
     public setUIConf(uiId: number, conf: IUIConf): void {
         this._uiConf[uiId] = conf;
+    }
+
+    public resize() {
+        //根据屏幕大小决定适配策略
+        //想明白原理，请阅读本文 https://blog.csdn.net/qq_36720848/article/details/89742451
+
+        let dr = view.getDesignResolutionSize();
+        var s = view.getFrameSize();
+        var rw = s.width;
+        var rh = s.height;
+        var finalW = rw;
+        var finalH = rh;
+
+        if ((rw / rh) > (dr.width / dr.height)) {
+            //如果更长，则用定高
+            finalH = dr.height;
+            finalW = finalH * rw / rh;
+        }
+        else {
+            //如果更短，则用定宽
+            finalW = dr.width;
+            finalH = rh / rw * finalW;
+        }
+
+        view.setDesignResolutionSize(finalW, finalH, ResolutionPolicy.UNKNOWN);
+        let cvs = find('Canvas')!.getComponent(UITransform)!;
+        cvs.setContentSize(finalW, finalH);
+    }
+
+    public setup(maxLayers: number) {
+        if (this._layerRoot.length > 0) return;
+
+        this.resize();
+        let cvs = find('Canvas')!.getComponent(UITransform)!;
+        for (let i = 0; i < maxLayers; ++i) {
+            let layer = new Node();
+            layer.setPosition(0, 0);
+            layer.parent = cvs.node;
+
+            let uiTrans = layer.addComponent(UITransform);
+            uiTrans.width = cvs.width;
+            uiTrans.height = cvs.height;
+
+            let widget = layer.addComponent(Widget);
+            widget.isAlignBottom = true;
+            widget.isAlignLeft = true;
+            widget.isAbsoluteRight = true;
+            widget.isAlignTop = true;
+
+            widget.bottom = 0;
+            widget.left = 0;
+            widget.right = 0;
+            widget.top = 0;
+
+            widget.alignMode = Widget.AlignMode.ON_WINDOW_RESIZE;
+            this._layerRoot.push(layer);
+        }
+    }
+
+    // 获取层级根节点
+    public getLayer(layerIdx: number) {
+        return this._layerRoot[layerIdx];
     }
 
     /****************** 私有方法，UIManager内部的功能和基础规则 *******************/
