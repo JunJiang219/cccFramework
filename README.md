@@ -1,2 +1,2 @@
-# cccFramework
-cocos creator framework
+# hello-world
+Hello world new project template.
