@@ -6,6 +6,7 @@ import Node = cc.Node;
 import Prefab = cc.Prefab;
 import instantiate = cc.instantiate;
 import js = cc.js;
+import { CCMResCacheArgs } from "./CCMResManager";
 
 export type ProgressCallback = (completedCount: number, totalCount: number, item: any) => void;
 export type CompleteCallback<T = any> = (error: Error, resource: any | any[], urls?: string[]) => void;
@@ -204,14 +205,15 @@ export class CCMResUtil {
     /**
     * 赋值srcAsset，并使其跟随targetNode自动释放，用法如下
     * mySprite.spriteFrame = AssignWith(otherSpriteFrame, mySpriteNode);
-    * @param srcAsset 用于赋值的资源，如cc.SpriteFrame、cc.Texture等等
+    * @param srcAsset       用于赋值的资源，如cc.SpriteFrame、cc.Texture等等
     * @param targetNode 
-    * @param autoCreate 
+    * @param autoCreate
+    * @param args           缓存参数
     */
-    public static assignWith(srcAsset: Asset, targetNode: Node, autoCreate?: boolean): any {
+    public static assignWith(srcAsset: Asset, targetNode: Node, autoCreate?: boolean, args?: CCMResCacheArgs): any {
         let keeper = CCMResUtil.getResKeeper(targetNode, autoCreate);
         if (keeper && srcAsset instanceof Asset) {
-            keeper.cacheAsset(srcAsset);
+            keeper.cacheAsset(srcAsset, args);
             return srcAsset;
         } else {
             console.error(`assignWith ${srcAsset} to ${targetNode} faile`);
@@ -221,13 +223,14 @@ export class CCMResUtil {
 
     /**
      * 实例化一个prefab，并带自动释放功能
-     * @param prefab 要实例化的预制
+     * @param prefab    要实例化的预制
+     * @param args      缓存参数
      */
-    public static instantiate(prefab: Prefab): Node {
+    public static instantiate(prefab: Prefab, args?: CCMResCacheArgs): Node {
         let node = instantiate(prefab);
         let keeper = CCMResUtil.getResKeeper(node, true);
         if (keeper) {
-            keeper.cacheAsset(prefab);
+            keeper.cacheAsset(prefab, args);
         }
         return node;
     }
